@@ -9,7 +9,7 @@ export class Test1ctrlController {
   @UseGuards(FirebaseAuthGuard)
   @Get()
   async findAll() {
-    const document = this.firestore.collection('users').doc('nZGVhYHobxxfy6aEVWDy');
+    const document = this.firestore.collection('users').doc('test@test.se');
     const docData = await document.get();
     if (docData.exists) {
       return docData.data();
