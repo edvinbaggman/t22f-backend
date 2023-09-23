@@ -4,6 +4,7 @@ import { Users } from './model/users.model';
 import { CreateUsersDto } from './dto/create-users.dto';
 import { CreatePlayersDto } from './dto/create-players.dto';
 import { Players } from './interface/players.interface';
+import { gameRsultDto } from './dto/gameResult.dto';
 // import { Tournament } from 'src/tournaments/entities/tournament.entity';
 
 @Injectable()
@@ -36,6 +37,8 @@ export class UsersService {
         name: player.name,
         id: playerId,
         stats: [],
+        gamesG: 0,
+        wonG: 0,
       },
     };
     // console.log(newPlayer); // For debbuging
@@ -85,7 +88,7 @@ export class UsersService {
       throw new Error('User not found');
     }
     const fieldPath = `players.${playerId}.name`;
-    console.log(fieldPath);
+    // console.log(fieldPath);
 
     await userRef.update({
       [fieldPath]: renamePlayerDto.name,
@@ -93,14 +96,13 @@ export class UsersService {
     return renamePlayerDto;
   }
 
+  // It can add a new tournament to a player (Add in the input tournamentId and remove the generation tournamentId in the body )
   async createTournament(userId: string, playerId: string): Promise<any> {
     const TournamentsId = this.firestore.collection('tournaments').doc().id;
     const newStat = {
-      [TournamentsId]: {
-        games: 0,
-        id: TournamentsId,
-        won: 0,
-      },
+      games: 0,
+      id: TournamentsId,
+      won: 0,
     };
     const userRef = this.firestore.collection('users').doc(userId);
     const userDoc = await userRef.get();
@@ -113,7 +115,7 @@ export class UsersService {
     if (!userData.players || !userData.players[playerId]) {
       throw new Error('Player not found');
     }
-    const fieldPath = `players.${playerId}.stats`;
+    const fieldPath = `players.${playerId}.stats.${TournamentsId}`;
     console.log(newStat);
     await userRef.update({
       [fieldPath]: newStat,
@@ -121,13 +123,12 @@ export class UsersService {
     return newStat;
   }
 
-  // udpdate games and won [TO CHECK]
-  async updateTournament(
+  // udpdate games and won of a tournament
+  async addGameResult(
     userId: string,
     playerId: string,
     tournamentId: string,
-    games: number,
-    won: number,
+    win: gameRsultDto,
   ): Promise<any> {
     const userRef = this.firestore.collection('users').doc(userId);
     const userDoc = await userRef.get();
@@ -140,16 +141,58 @@ export class UsersService {
       throw new Error('Player not found');
     }
     const fieldPath = `players.${playerId}.stats.${tournamentId}`;
+
+    if (
+      !userData.players[playerId].stats ||
+      !userData.players[playerId].stats[tournamentId]
+    ) {
+      throw new Error('Stat tournament not found');
+    }
+    let currentGames =
+      userData.players[playerId].stats[tournamentId].games || 0;
+    let currentWon = userData.players[playerId].stats[tournamentId].won || 0;
+
+    currentGames += 1;
+    if (win) {
+      currentWon += 1;
+    }
     await userRef.update({
       [fieldPath]: {
-        games,
-        won,
+        games: currentGames,
+        won: currentWon,
       },
     });
-    return { games, won };
+    return { currentGames, currentWon };
   }
 
-  // get user by id [TO CHECK]
+  // Calculate and return the number of games and won of all tournaments
+  async getTotalStats(userId: string, playerId: string): Promise<any> {
+    const userRef = this.firestore.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) {
+      throw new Error('User not found');
+    }
+    const userData = userDoc.data();
+
+    if (!userData.players || !userData.players[playerId]) {
+      throw new Error('Player not found');
+    }
+
+    let totalGames = 0;
+    let totalWon = 0;
+    for (const tournamentId in userData.players[playerId].stats) {
+      if (userData.players[playerId].stats.hasOwnProperty(tournamentId)) {
+        totalGames += userData.players[playerId].stats[tournamentId].games || 0;
+        totalWon += userData.players[playerId].stats[tournamentId].won || 0;
+      }
+    }
+    return {
+      TotalGames: totalGames.toString(),
+      TotalWon: totalWon.toString(),
+    };
+  }
+
+  // get a user by id [TO CHECK]
   async findOne(userId: string): Promise<Users> {
     const userRef = this.firestore.collection('users').doc(userId);
     const userDoc = await userRef.get();
@@ -175,27 +218,6 @@ export class UsersService {
     });
     return user;
   }
-
-  // get games and won [TO CHECK]
-  // async getTournament(
-  //   userId: string,
-  //   playerId: string,
-  //   tournamentId: string,
-  // ): Promise<any> {
-  //   const userRef = this.firestore.collection('users').doc(userId);
-  //   const userDoc = await userRef.get();
-  //   if (!userDoc.exists) {
-  //     throw new Error('User not found');
-  //   }
-  //   const userData = userDoc.data();
-
-  //   if (!userData.players || !userData.players[playerId]) {
-  //     throw new Error('Player not found');
-  //   }
-  //   const fieldPath = `players.${playerId}.stats.${tournamentId}`;
-  //   const tournament = await userRef.get(fieldPath);
-  //   return tournament;
-  // }
 }
 
 //

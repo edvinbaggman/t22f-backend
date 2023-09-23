@@ -19,6 +19,7 @@ import {
 
 import { FirebaseAuthGuard } from '../firebase/firebase-auth.guard';
 import { CreatePlayersDto } from './dto/create-players.dto';
+import { gameRsultDto } from './dto/gameResult.dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -44,7 +45,7 @@ export class UsersController {
   @Patch(':userId/createPlayer')
   @ApiOperation({ summary: 'Create a player' })
   @ApiBearerAuth()
-  @UseGuards(FirebaseAuthGuard)
+  @UseGuards(FirebaseAuthGuard) // To add later when we will use authentication
   @ApiResponse({
     status: 200,
     description:
@@ -62,7 +63,7 @@ export class UsersController {
 
   @Get(':userId/playersNames')
   @ApiBearerAuth()
-  @UseGuards(FirebaseAuthGuard)
+  // @UseGuards(FirebaseAuthGuard) // To add later when we will use authentication
   @ApiOperation({ summary: 'Get names of all players of a user' })
   @ApiResponse({
     status: 200,
@@ -88,7 +89,7 @@ export class UsersController {
     return this.userService.renamePlayer(userId, playerId, renamePlayerDto);
   }
 
-  @Patch(':userId/players/:playerId/newStats')
+  @Patch(':userId/players/:playerId/newTournements')
   @ApiResponse({
     status: 200,
     description: 'The player has been successfully renamed.',
@@ -100,9 +101,29 @@ export class UsersController {
   ) {
     return this.userService.createTournament(userId, playerId);
   }
+
+  @Patch(':userId/players/:playerId/addGameResult/:tournamentId')
+  addGameResult(
+    @Param('userId') userId: string,
+    @Param('playerId') playerId: string,
+    @Param('tournamentId') tournamentId: string,
+    @Body() win: gameRsultDto,
+  ) {
+    return this.userService.addGameResult(userId, playerId, tournamentId, win);
+  }
+
+  @Patch(':userId/players/:playerId/getTotalStats')
+  getTotalStats(
+    @Param('userId') userId: string,
+    @Param('playerId') playerId: string,
+  ) {
+    return this.userService.getTotalStats(userId, playerId);
+  }
 }
 
-//
+// what happens if two user are creating the same player, is it relevent that we should save every
+// player or we can just pretend that every user will have this own players
+// [To disscuss !!!]
 
 //
 
