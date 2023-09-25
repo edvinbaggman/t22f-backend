@@ -3,7 +3,8 @@ import * as admin from 'firebase-admin';
 import { Users } from './model/users.model';
 import { CreateUsersDto } from './dto/create-users.dto';
 import { CreatePlayersDto } from './dto/create-players.dto';
-import { Players } from './interface/players.interface';
+import { Players } from './model/players.model';
+import crypto from 'crypto';
 // import { Tournament } from 'src/tournaments/entities/tournament.entity';
 
 @Injectable()
@@ -47,14 +48,12 @@ export class UsersService {
     userId: string,
     player: CreatePlayersDto,
   ): Promise<Players> {
-    const playerId = this.firestore.collection('players').doc().id;
+    const playerId = crypto.randomUUID();
     // console.log(player); // For debbuging
     const newPlayer = {
-      [playerId]: {
-        name: player.name,
-        id: playerId,
-        stats: [],
-      },
+      name: player.name,
+      id: playerId,
+      stats: {},
     };
     // console.log(newPlayer); // For debbuging
     const userRef = this.firestore.collection('users').doc(userId);
@@ -64,12 +63,10 @@ export class UsersService {
     }
     // const userData = userDoc.data(); // For debbuging
     // console.log(userData);
-    await userRef.set(
-      {
-        players: newPlayer,
-      },
-      { merge: true },
-    );
+    const updateObject = {};
+    updateObject[`players.${playerId}`] = newPlayer;
+    await userRef.update(updateObject);
+
     return newPlayer;
   }
 
