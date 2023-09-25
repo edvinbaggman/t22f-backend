@@ -37,13 +37,6 @@ export class UsersService {
     return { id: doc.id, ...doc.data() } as Users;
   }
 
-  // async createUser(user: CreateUsersDto): Promise<Users> {
-  //   const newUser = { ...user, players: {} }; // to add an empty array of players
-  //   const docRef = await this.firestore.collection('users').add(newUser);
-  //   const doc = await docRef.get();
-  //   return { id: doc.id, ...doc.data() } as Users;
-  // }
-
   async createPlayer(
     userId: string,
     player: CreatePlayersDto,
