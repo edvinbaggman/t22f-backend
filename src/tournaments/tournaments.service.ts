@@ -15,8 +15,7 @@ export class TournamentsService {
     const tournamentRef = this.firestore
       .collection('tournaments')
       .doc(tournamentId);
-    const owner = 'GET FROM JWT'; //TODO
-    const newTournament = { ...createTournamentDto, rounds: [], owner: owner };
+    const newTournament = { ...createTournamentDto, rounds: [], players: [] };
     const res = await tournamentRef.set(newTournament);
     return JSON.stringify(res);
   }
@@ -55,29 +54,59 @@ export class TournamentsService {
   async addScore(id: string, matchResultDto: matchResultDto) {
     const tournamentRef = this.firestore.collection('tournaments').doc(id);
 
-    const updateObject = {};
-    updateObject[
-      `rounds.${matchResultDto.round}.${matchResultDto.match}.${matchResultDto.team}.points`
-    ] = matchResultDto.points;
+    const updateObject1 = {};
+    updateObject1[
+      `rounds.${matchResultDto.round}.${matchResultDto.match}.team1.points`
+    ] = matchResultDto.team1Points;
+    const updateObject2 = {};
+    updateObject2[
+      `rounds.${matchResultDto.round}.${matchResultDto.match}.team2.points`
+    ] = matchResultDto.team2Points;
 
-    // TODO add stat to playes
+    tournamentRef.update(updateObject1);
+    tournamentRef.update(updateObject2);
 
-    tournamentRef.update(updateObject);
+    const pointsDiff = matchResultDto.team1Points - matchResultDto.team2Points;
+
+    const tournementDoc = await tournamentRef.get();
+    const tournementData = tournementDoc.data();
+    for (const roundKey in tournementData.rounds) {
+      const round = tournementData.rounds[roundKey];
+      for (const matchKey in round) {
+        const match = round[matchKey];
+        for (const teamKey in match) {
+          let teamCoef = 1;
+          if (teamKey === 'team2') {
+            teamCoef = -1;
+          }
+          const team = match[teamKey];
+          for (const playerKey in team.players) {
+            const player = team.players[playerKey];
+            this.addStatsPlayer(
+              tournementData.owner,
+              player,
+              id,
+              pointsDiff * teamCoef,
+            );
+          }
+        }
+      }
+    }
   }
 
   async addPlayer(id: string, user: string, playerId: string) {
     const tournamentRef = this.firestore.collection('tournaments').doc(id);
     const userRef = this.firestore.collection('users').doc(user);
-
+    // console.log(id, user, playerId); // for debugg
+    // console.log(tournamentRef);
     await tournamentRef.update({
       players: FieldValue.arrayUnion(playerId),
     });
-
     const newStat = {
       games: 0,
+      id: id,
       won: 0,
     };
-
     const fieldPath = `players.${playerId}.stats.${id}`;
     await userRef.update({
       [fieldPath]: newStat,
@@ -105,6 +134,50 @@ export class TournamentsService {
     const res = await tournamentRef.delete();
 
     return JSON.stringify(res);
+  }
+
+  async addStatsPlayer(
+    userId: string,
+    playerId: string,
+    tournamentId: string,
+    points: number,
+  ) {
+    const userRef = this.firestore.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) {
+      throw new Error('User not found');
+    }
+    const userData = userDoc.data();
+
+    if (!userData.players || !userData.players[playerId]) {
+      throw new Error('Player not found');
+    }
+    const fieldPath = `players.${playerId}.stats.${tournamentId}`;
+
+    if (
+      !userData.players[playerId].stats ||
+      !userData.players[playerId].stats[tournamentId]
+    ) {
+      throw new Error('Stat tournament not found');
+    }
+    let currentGames =
+      userData.players[playerId].stats[tournamentId].games || 0;
+    let currentWon = userData.players[playerId].stats[tournamentId].won || 0;
+    let currentPoints =
+      userData.players[playerId].stats[tournamentId].points || 0;
+    currentGames += 1;
+    currentPoints += points;
+    if (points > 0) {
+      currentWon += 1;
+    }
+    await userRef.update({
+      [fieldPath]: {
+        games: currentGames,
+        won: currentWon,
+        points: currentPoints,
+      },
+    });
+    return { currentGames, currentWon, currentPoints };
   }
 }
 
