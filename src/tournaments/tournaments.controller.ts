@@ -41,9 +41,13 @@ export class TournamentsController {
     return this.tournamentsService.addScore(id, matchResult);
   }
 
-  @Patch(':id/addPlayer')
-  addPlayer(@Param('id') id: string, @Body() player: addPlayerDto) {
-    return this.tournamentsService.addPlayer(id, player);
+  @Patch(':id/:user/:playerId')
+  addPlayer(
+    @Param('id') id: string,
+    @Param('user') user: string,
+    @Param('playerId') playerId: string,
+  ) {
+    return this.tournamentsService.addPlayer(id, user, playerId);
   }
 
   @Patch(':id/removePlayer')

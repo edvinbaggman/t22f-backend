@@ -37,8 +37,6 @@ export class UsersService {
         name: player.name,
         id: playerId,
         stats: [],
-        gamesG: 0,
-        wonG: 0,
       },
     };
     // console.log(newPlayer); // For debbuging

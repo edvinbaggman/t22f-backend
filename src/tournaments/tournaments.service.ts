@@ -60,16 +60,30 @@ export class TournamentsService {
       `rounds.${matchResultDto.round}.${matchResultDto.match}.${matchResultDto.team}.points`
     ] = matchResultDto.points;
 
+    // TODO add stat to playes
+
     tournamentRef.update(updateObject);
   }
 
-  async addPlayer(id: string, player: addPlayerDto) {
+  async addPlayer(id: string, user: string, playerId: string) {
     const tournamentRef = this.firestore.collection('tournaments').doc(id);
+    const userRef = this.firestore.collection('users').doc(user);
 
-    const res = tournamentRef.update({
-      players: FieldValue.arrayUnion(player.name),
+    await tournamentRef.update({
+      players: FieldValue.arrayUnion(playerId),
     });
-    return JSON.stringify(res);
+
+    const newStat = {
+      games: 0,
+      won: 0,
+    };
+
+    const fieldPath = `players.${playerId}.stats.${id}`;
+    await userRef.update({
+      [fieldPath]: newStat,
+    });
+
+    return JSON.stringify(newStat);
   }
 
   async removePlayer(id: string, player: addPlayerDto) {
@@ -78,7 +92,7 @@ export class TournamentsService {
     const tournamentData = tournamentSnapshot.data();
 
     const players = tournamentData.players;
-    const playersWithoutplayer = players.filter((p) => p !== player.name);
+    const playersWithoutplayer = players.filter((p) => p !== player.id);
 
     const res = tournamentRef.update({
       players: playersWithoutplayer,
