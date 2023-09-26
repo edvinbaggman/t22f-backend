@@ -43,10 +43,10 @@ export class TournamentsService {
 
     const roundsPlayed = Object.keys(tournamentData.rounds).length;
 
-    const newRound = generateMatches(tournamentData);
+    const round = generateManyRoundsAndPickOne(tournamentData);
 
     const updateObject = {};
-    updateObject[`rounds.${roundsPlayed}`] = newRound;
+    updateObject[`rounds.${roundsPlayed}`] = round;
     const res = tournamentRef.update(updateObject);
     return JSON.stringify(res);
   }
@@ -181,7 +181,7 @@ export class TournamentsService {
   }
 }
 
-//Creates matches at random. TODO algorithm
+//Creates matches at random. Not to be used.
 const generateMatches = (tournamentData) => {
   const round = {};
   const players = tournamentData.players;
@@ -200,3 +200,167 @@ const generateMatches = (tournamentData) => {
   }
   return round;
 };
+
+const generateManyRoundsAndPickOne = (tournamentData) => {
+  let bestRound;
+  let minVal = 99999;
+  //Run x times and pick the best round.
+  for (let index = 0; index < 100; index++) {
+    const { round, gri } = generateRound(tournamentData);
+    if (gri < minVal) {
+      bestRound = round;
+      minVal = gri;
+    }
+  }
+  return bestRound;
+};
+
+//A randomized algorithm to generate a round that is as good as possible
+const generateRound = (tournamentData) => {
+  const round = {};
+
+  const playersArray = tournamentData.players;
+  const playersLength = playersArray.length;
+  const shuffledPlayersArray = shuffle(playersArray);
+
+  //Create matrix with zeros
+  const playedMatrix = [];
+  for (let i = 0; i < playersLength; i++) {
+    playedMatrix[i] = new Array(playersLength).fill(0);
+  }
+
+  //Populate matrix with played matches
+  for (const roundIndex in tournamentData.rounds) {
+    for (const matchId in tournamentData.rounds[roundIndex]) {
+      const team1 = tournamentData.rounds[roundIndex][matchId].team1.players;
+      const team2 = tournamentData.rounds[roundIndex][matchId].team2.players;
+
+      const indexPlayer1Team1 = shuffledPlayersArray.indexOf(team1[0]);
+      const indexPlayer2Team1 = shuffledPlayersArray.indexOf(team1[1]);
+      const indexPlayer1Team2 = shuffledPlayersArray.indexOf(team2[0]);
+      const indexPlayer2Team2 = shuffledPlayersArray.indexOf(team2[1]);
+
+      //For each game, played with (+2), played against (+1)
+      playedMatrix[indexPlayer1Team1][indexPlayer2Team1] += 2;
+      playedMatrix[indexPlayer2Team1][indexPlayer1Team1] += 2;
+
+      playedMatrix[indexPlayer1Team1][indexPlayer1Team2] += 1;
+      playedMatrix[indexPlayer1Team2][indexPlayer1Team1] += 1;
+
+      playedMatrix[indexPlayer1Team1][indexPlayer2Team2] += 1;
+      playedMatrix[indexPlayer2Team2][indexPlayer1Team1] += 1;
+
+      playedMatrix[indexPlayer2Team1][indexPlayer1Team2] += 1;
+      playedMatrix[indexPlayer1Team2][indexPlayer2Team1] += 1;
+
+      playedMatrix[indexPlayer2Team1][indexPlayer2Team2] += 1;
+      playedMatrix[indexPlayer2Team2][indexPlayer2Team1] += 1;
+
+      playedMatrix[indexPlayer1Team2][indexPlayer2Team2] += 2;
+      playedMatrix[indexPlayer2Team2][indexPlayer1Team2] += 2;
+    }
+  }
+
+  //Get a sorted array of the players that has played the least. Give them matches first
+  const orderOfSums = getOrderOfSums(playedMatrix);
+
+  const maximumNumberOfGames = Math.floor(playersLength / 4);
+  const maximumNumberOfPlayers = maximumNumberOfGames * 4;
+
+  const orderOfSumsSliced = orderOfSums.slice(0, maximumNumberOfPlayers);
+
+  // gri = Good Round Index. Meassures how good a round is. The lower the better.
+  let gri = 0;
+
+  //Create matches that gives the least amount of points
+  for (let index = 0; index < maximumNumberOfGames; index++) {
+    const team1Player1Index = orderOfSumsSliced.shift();
+    let minVal = 9999;
+    let minVal2 = 9999;
+    let minVal3 = 9999;
+    let team1Player2Index;
+    let team2Player1Index;
+    let team2Player2Index;
+
+    //Find teammate and one opponent
+    for (const playerIndex of orderOfSumsSliced) {
+      if (playedMatrix[team1Player1Index][playerIndex] < minVal) {
+        if (team1Player2Index) {
+          team2Player1Index = team1Player2Index;
+          minVal2 = playedMatrix[team1Player1Index][team2Player1Index];
+        }
+        minVal = playedMatrix[team1Player1Index][playerIndex];
+        team1Player2Index = playerIndex;
+      } else if (playedMatrix[team1Player1Index][playerIndex] < minVal2) {
+        minVal2 = playedMatrix[team1Player1Index][playerIndex];
+        team2Player1Index = playerIndex;
+      }
+    }
+
+    orderOfSumsSliced.splice(orderOfSumsSliced.indexOf(team1Player2Index), 1);
+    orderOfSumsSliced.splice(orderOfSumsSliced.indexOf(team2Player1Index), 1);
+
+    const team1Players = [
+      shuffledPlayersArray[team1Player1Index],
+      shuffledPlayersArray[team1Player2Index],
+    ];
+
+    //Find teammate for other team
+    for (const playerIndex of orderOfSumsSliced) {
+      if (playedMatrix[team2Player1Index][playerIndex] < minVal3) {
+        minVal3 = playedMatrix[team2Player1Index][playerIndex];
+        team2Player2Index = playerIndex;
+      }
+    }
+
+    orderOfSumsSliced.splice(orderOfSumsSliced.indexOf(team2Player2Index), 1);
+
+    // Add teams to match
+    const team2Players = [
+      shuffledPlayersArray[team2Player1Index],
+      shuffledPlayersArray[team2Player2Index],
+    ];
+
+    const match = {
+      team1: { players: team1Players, points: '' },
+      team2: { players: team2Players, points: '' },
+    };
+
+    //This is a value of how good the match is. The lower the better
+    gri = gri + minVal + minVal2 + minVal3;
+
+    //Add match to round
+    const matchId = crypto.randomUUID();
+    round[matchId] = match;
+  }
+
+  const returnObject = {
+    round,
+    gri,
+  };
+
+  return returnObject;
+};
+
+const shuffle = (array: string[]) => {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+};
+
+function calculateRowSum(row) {
+  return row.reduce((acc, curr) => acc + curr, 0);
+}
+
+function getOrderOfSums(matrix) {
+  const sumsWithIndex = matrix.map((row, index) => ({
+    index,
+    sum: calculateRowSum(row),
+  }));
+
+  sumsWithIndex.sort((a, b) => a.sum - b.sum);
+
+  return sumsWithIndex.map((item) => item.index);
+}
