@@ -15,7 +15,12 @@ export class TournamentsService {
     const tournamentRef = this.firestore
       .collection('tournaments')
       .doc(tournamentId);
-    const newTournament = { ...createTournamentDto, rounds: [], players: [] };
+    const newTournament = {
+      ...createTournamentDto,
+      id: tournamentId,
+      rounds: [],
+      players: [],
+    };
     const res = await tournamentRef.set(newTournament);
     return JSON.stringify(res);
   }
