@@ -47,9 +47,9 @@ export class TournamentsService {
   async getTournamentSimple() {
     const tournamentRef = this.firestore.collection('tournaments');
     const tournamentsSnapshot = await tournamentRef.get();
-    const finish = [];
+    const finished = [];
     const upcoming = [];
-    const ongoing = [];
+    const todays = [];
 
     tournamentsSnapshot.docs.forEach((tournamentDoc) => {
       const tournamentData = tournamentDoc.data();
@@ -65,27 +65,27 @@ export class TournamentsService {
 
       switch (tournamentData.status) {
         case TournamentStatus.FINISHED:
-          finish.push(simplifiedTournament);
+          finished.push(simplifiedTournament);
           break;
         case TournamentStatus.UPCOMING:
           upcoming.push(simplifiedTournament);
           break;
         case TournamentStatus.ONGOING:
-          ongoing.push(simplifiedTournament);
+          todays.push(simplifiedTournament);
           break;
       }
     });
-    console.log({ finish });
-    return JSON.stringify({ finish, upcoming, ongoing });
+    // console.log({ finished });
+    return JSON.stringify({ finished, upcoming, todays });
   }
 
   async getUserTournamentSimple(userId: string) {
     // [TODO] the check of user (if he exists or not befoure the forEach)
     const tournamentRef = this.firestore.collection('tournaments');
     const tournamentsSnapshot = await tournamentRef.get();
-    const finish = [];
+    const finished = [];
     const upcoming = [];
-    const ongoing = [];
+    const todays = [];
 
     tournamentsSnapshot.docs.forEach((tournamentDoc) => {
       const tournamentData = tournamentDoc.data();
@@ -101,18 +101,18 @@ export class TournamentsService {
 
         switch (tournamentData.status) {
           case TournamentStatus.FINISHED:
-            finish.push(simplifiedTournament);
+            finished.push(simplifiedTournament);
             break;
           case TournamentStatus.UPCOMING:
             upcoming.push(simplifiedTournament);
             break;
           case TournamentStatus.ONGOING:
-            ongoing.push(simplifiedTournament);
+            todays.push(simplifiedTournament);
             break;
         }
       }
     });
-    return JSON.stringify({ finish, upcoming, ongoing });
+    return JSON.stringify({ finished, upcoming, todays });
   }
 
   async generateNewRound(id: string) {
