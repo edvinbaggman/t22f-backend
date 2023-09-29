@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, IsEnum } from 'class-validator';
+import { TournamentStatus } from '../enum/tournament-status.enum';
 
 export class CreateTournamentDto {
   @ApiProperty({ description: "Tournament's name" })
@@ -22,9 +23,9 @@ export class CreateTournamentDto {
   @IsString()
   location: string;
 
-  // @ApiProperty({ description: "Tournament's players" })
-  // @IsArray()
-  // players: string[];
+  @ApiProperty({ description: "Tournament's status (Finish,Coming,Ongoing)" })
+  @IsEnum(TournamentStatus)
+  status: TournamentStatus;
 
   @ApiProperty({ description: "Tournament's owner" })
   @IsString()

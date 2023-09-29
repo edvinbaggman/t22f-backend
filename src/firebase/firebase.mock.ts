@@ -2,6 +2,7 @@ jest.mock('firebase-admin', () => {
   const mockedFirestore = {
     collection: jest.fn().mockReturnValue({
       get: jest.fn().mockResolvedValueOnce({
+        // Just to test the data for Jest mock. I'll change it later for real data of our project.
         docs: [
           {
             data: () => ({

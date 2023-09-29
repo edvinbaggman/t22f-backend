@@ -5,6 +5,7 @@ import * as admin from 'firebase-admin';
 import crypto from 'crypto';
 import { FieldValue } from 'firebase-admin/firestore';
 import { addPlayerDto } from './dto/add-player.dto';
+import { TournamentStatus } from './enum/tournament-status.enum';
 
 @Injectable()
 export class TournamentsService {
@@ -39,6 +40,79 @@ export class TournamentsService {
     const tournamentSnapshot = await tournamentRef.get();
     const tournamentData = tournamentSnapshot.data();
     return JSON.stringify(tournamentData);
+  }
+
+  // TODO : creact a function to get the tournament simple (with the filter)
+  // To avoid code duplication, I'll do it later, don't worry ;)
+  async getTournamentSimple() {
+    const tournamentRef = this.firestore.collection('tournaments');
+    const tournamentsSnapshot = await tournamentRef.get();
+    const finish = [];
+    const upcoming = [];
+    const ongoing = [];
+
+    tournamentsSnapshot.docs.forEach((tournamentDoc) => {
+      const tournamentData = tournamentDoc.data();
+
+      const id = tournamentDoc.id;
+      const name = tournamentData.name;
+      const location = tournamentData.location;
+      const date = tournamentData.date;
+      const owner = tournamentData.owner;
+      const image = tournamentData.image;
+
+      const simplifiedTournament = { id, name, location, date, owner, image };
+
+      switch (tournamentData.status) {
+        case TournamentStatus.FINISHED:
+          finish.push(simplifiedTournament);
+          break;
+        case TournamentStatus.UPCOMING:
+          upcoming.push(simplifiedTournament);
+          break;
+        case TournamentStatus.ONGOING:
+          ongoing.push(simplifiedTournament);
+          break;
+      }
+    });
+    console.log({ finish });
+    return JSON.stringify({ finish, upcoming, ongoing });
+  }
+
+  async getUserTournamentSimple(userId: string) {
+    // [TODO] the check of user (if he exists or not befoure the forEach)
+    const tournamentRef = this.firestore.collection('tournaments');
+    const tournamentsSnapshot = await tournamentRef.get();
+    const finish = [];
+    const upcoming = [];
+    const ongoing = [];
+
+    tournamentsSnapshot.docs.forEach((tournamentDoc) => {
+      const tournamentData = tournamentDoc.data();
+      if (tournamentData.owner === userId) {
+        const id = tournamentDoc.id; // Assumant que le document ID est l'ID du tournoi
+        const name = tournamentData.name;
+        const location = tournamentData.location;
+        const date = tournamentData.date;
+        const owner = tournamentData.owner;
+        const image = tournamentData.image;
+
+        const simplifiedTournament = { id, name, location, date, owner, image };
+
+        switch (tournamentData.status) {
+          case TournamentStatus.FINISHED:
+            finish.push(simplifiedTournament);
+            break;
+          case TournamentStatus.UPCOMING:
+            upcoming.push(simplifiedTournament);
+            break;
+          case TournamentStatus.ONGOING:
+            ongoing.push(simplifiedTournament);
+            break;
+        }
+      }
+    });
+    return JSON.stringify({ finish, upcoming, ongoing });
   }
 
   async generateNewRound(id: string) {
@@ -187,24 +261,24 @@ export class TournamentsService {
 }
 
 //Creates matches at random. Not to be used.
-const generateMatches = (tournamentData) => {
-  const round = {};
-  const players = tournamentData.players;
-  while (players.length >= 4) {
-    const matchId = crypto.randomUUID();
-    const matchPlayers = [];
-    for (let index = 0; index < 4; index++) {
-      const randomIndex = Math.floor(Math.random() * players.length);
-      matchPlayers.push(players.splice(randomIndex, 1)[0]);
-    }
-    const match = {
-      team1: { players: matchPlayers.slice(0, 2), points: '' },
-      team2: { players: matchPlayers.slice(2), points: '' },
-    };
-    round[matchId] = match;
-  }
-  return round;
-};
+// const generateMatches = (tournamentData) => {
+//   const round = {};
+//   const players = tournamentData.players;
+//   while (players.length >= 4) {
+//     const matchId = crypto.randomUUID();
+//     const matchPlayers = [];
+//     for (let index = 0; index < 4; index++) {
+//       const randomIndex = Math.floor(Math.random() * players.length);
+//       matchPlayers.push(players.splice(randomIndex, 1)[0]);
+//     }
+//     const match = {
+//       team1: { players: matchPlayers.slice(0, 2), points: '' },
+//       team2: { players: matchPlayers.slice(2), points: '' },
+//     };
+//     round[matchId] = match;
+//   }
+//   return round;
+// };
 
 const generateManyRoundsAndPickOne = (tournamentData) => {
   let bestRound;

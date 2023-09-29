@@ -20,7 +20,8 @@ import { CreateTournamentDto } from './dto/create-tournament.dto';
 import { matchResultDto } from './dto/match-result.dto';
 import { addPlayerDto } from './dto/add-player.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { bucket, gcsBucketName } from 'src/firebase/gcs.config';
+import { bucket, gcsBucketName } from '../firebase/gcs.config';
+// import { bucket, gcsBucketName } from 'src/firebase/gcs.config';
 import mime from 'mime-types';
 import crypto from 'crypto';
 
@@ -39,6 +40,18 @@ export class TournamentsController {
   @ApiOperation({ summary: 'Get all Tournaments' })
   findAll() {
     return this.tournamentsService.findAll();
+  }
+
+  @Get('simple')
+  @ApiOperation({ summary: 'Get all TournamentsSimple' })
+  getTournamentSimple() {
+    return this.tournamentsService.getTournamentSimple();
+  }
+
+  @Get('simple/:userId')
+  @ApiOperation({ summary: 'Get all TournamentsSimple' })
+  getUserTournamentSimple(@Param('userId') userId: string) {
+    return this.tournamentsService.getUserTournamentSimple(userId);
   }
 
   @Get(':id')
