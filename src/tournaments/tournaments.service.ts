@@ -6,12 +6,18 @@ import crypto from 'crypto';
 import { FieldValue } from 'firebase-admin/firestore';
 import { addPlayerDto } from './dto/add-player.dto';
 import { TournamentStatus } from './enum/tournament-status.enum';
+import mime from 'mime-types';
+import { bucket, gcsBucketName } from '../firebase/gcs.config';
 
 @Injectable()
 export class TournamentsService {
   private readonly firestore = admin.firestore();
 
-  async create(createTournamentDto: CreateTournamentDto) {
+  async create(
+    createTournamentDto: CreateTournamentDto,
+    file: Express.Multer.File,
+  ) {
+    const imageUrl = await uploadImage(file);
     const tournamentId = crypto.randomUUID();
     const tournamentRef = this.firestore
       .collection('tournaments')
@@ -22,6 +28,7 @@ export class TournamentsService {
       rounds: [],
       players: [],
       playersInactive: [],
+      image: imageUrl,
     };
     const res = await tournamentRef.set(newTournament);
     return JSON.stringify(res);
@@ -482,4 +489,36 @@ function getOrderOfSums(matrix) {
   sumsWithIndex.sort((a, b) => a.sum - b.sum);
 
   return sumsWithIndex.map((item) => item.index);
+}
+
+async function uploadImage(file: Express.Multer.File) {
+  let publicUrl = '';
+  if (file && file.buffer instanceof Buffer) {
+    try {
+      const fileType = mime.extension(file.mimetype);
+      const fileId = crypto.randomUUID();
+      const fileName = `${fileId}.${fileType}`;
+      const blob = bucket.file(fileName);
+      const blobStream = blob.createWriteStream({
+        resumable: false,
+        gzip: true,
+      });
+
+      await new Promise((resolve, reject) => {
+        blobStream.on('error', (err) => {
+          reject(err);
+        });
+
+        blobStream.on('finish', () => {
+          publicUrl = `https://storage.googleapis.com/${gcsBucketName}/${fileName}`;
+          resolve('File uploaded');
+        });
+
+        blobStream.end(file.buffer);
+      });
+    } catch (error) {
+      console.error('Error uploading file:', error);
+    }
+  }
+  return publicUrl;
 }
