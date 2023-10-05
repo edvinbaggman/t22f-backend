@@ -15,13 +15,15 @@ import {
   ApiTags,
   // ApiResponse,
   ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
 } from '@nestjs/swagger';
 import { TournamentsService } from './tournaments.service';
 import { CreateTournamentDto } from './dto/create-tournament.dto';
 import { matchResultDto } from './dto/match-result.dto';
-import { addPlayerDto } from './dto/add-player.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { IsNotEmpty, IsString, validate } from 'class-validator';
+import { CreatePlayersDto } from 'src/users/dto/create-players.dto';
 
 export class testClass {
   @IsNotEmpty()
@@ -96,21 +98,72 @@ export class TournamentsController {
     return this.tournamentsService.addScore(id, matchResult);
   }
 
-  @Patch(':id/:user/:playerId')
-  @ApiOperation({ summary: 'Add Player to Tournament' })
-  @ApiOperation({ summary: 'add player' })
-  addPlayer(
-    @Param('id') id: string,
-    @Param('user') user: string,
-    @Param('playerId') playerId: string,
+  @Patch(':tournamentId/createPlayer')
+  @ApiOperation({ summary: 'Create a player' })
+  @ApiBearerAuth()
+  // @UseGuards(FirebaseAuthGuard) // To add later when we will use authentication
+  @ApiResponse({
+    status: 200,
+    description:
+      'The player has been successfully created and added to the user.',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 404, description: 'User not found.' })
+  @ApiResponse({ status: 400, description: 'Bad Request.' })
+  createPlayer(
+    @Param('tournamentId') tournamentId: string,
+    @Body() createPlayerDto: CreatePlayersDto,
   ) {
-    return this.tournamentsService.addPlayer(id, user, playerId);
+    return this.tournamentsService.createPlayer(tournamentId, createPlayerDto);
   }
 
-  @Patch(':id/removePlayer')
+  @Patch(':id/addPlayer/:playerId')
+  @ApiOperation({ summary: 'Add Player to Tournament' })
+  @ApiOperation({ summary: 'add player' })
+  addPlayer(@Param('id') id: string, @Param('playerId') playerId: string) {
+    return this.tournamentsService.addPlayer(id, playerId);
+  }
+
+  @Get(':tournamentId/getTournamentPlayers')
+  @ApiOperation({ summary: 'Get names of all players of a user' })
+  @ApiBearerAuth()
+  // @UseGuards(FirebaseAuthGuard) // To add later when we will use authentication
+  @ApiResponse({
+    status: 200,
+    description: 'Players names retrieved successfully.',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 404, description: 'User not found.' })
+  getTournamentPlayers(
+    @Param('tournamentId') tournamentId: string,
+  ): Promise<{ id: string; name: string }[]> {
+    return this.tournamentsService.getTournamentPlayers(tournamentId);
+  }
+
+  @Get(':tournamentId/getPlayersNotInTournamment')
+  @ApiOperation({ summary: 'Get names of all players of a user' })
+  @ApiBearerAuth()
+  // @UseGuards(FirebaseAuthGuard) // To add later when we will use authentication
+  @ApiResponse({
+    status: 200,
+    description: 'Players names retrieved successfully.',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 404, description: 'User not found.' })
+  getPlayersNotInTournamment(
+    @Param('tournamentId') tournamentId: string,
+  ): Promise<{ id: string; name: string }[]> {
+    return this.tournamentsService.getPlayersNotInTournament(tournamentId);
+  }
+
+  // to change
+  @Patch(':tournamentId/removePlayer/:playerId')
   @ApiOperation({ summary: 'Remove Player from Tournament' })
-  removePlayer(@Param('id') id: string, @Body() player: addPlayerDto) {
-    return this.tournamentsService.removePlayer(id, player);
+  removePlayer(
+    @Param('tournamentId') tournamentId: string,
+    @Param('playerId') playerId: string,
+  ) {
+    return this.tournamentsService.removePlayer(tournamentId, playerId);
   }
 
   @Delete(':id')

@@ -3,8 +3,8 @@ import * as admin from 'firebase-admin';
 import { Users } from './model/users.model';
 import { CreateUsersDto } from './dto/create-users.dto';
 import { CreatePlayersDto } from './dto/create-players.dto';
-import { Players } from './model/players.model';
-import crypto from 'crypto';
+// import { Players } from './model/players.model';
+// import crypto from 'crypto';
 // import { Tournament } from 'src/tournaments/entities/tournament.entity';
 
 @Injectable()
@@ -35,32 +35,6 @@ export class UsersService {
     await docRef.set(newUser);
     const doc = await docRef.get();
     return { id: doc.id, ...doc.data() } as Users;
-  }
-
-  async createPlayer(
-    userId: string,
-    player: CreatePlayersDto,
-  ): Promise<Players> {
-    const playerId = crypto.randomUUID();
-    // console.log(player); // For debbuging
-    const newPlayer = {
-      name: player.name,
-      id: playerId,
-      stats: {},
-    };
-    // console.log(newPlayer); // For debbuging
-    const userRef = this.firestore.collection('users').doc(userId);
-    const userDoc = await userRef.get();
-    if (!userDoc.exists) {
-      throw new Error('User not found');
-    }
-    // const userData = userDoc.data(); // For debbuging
-    // console.log(userData);
-    const updateObject = {};
-    updateObject[`players.${playerId}`] = newPlayer;
-    await userRef.update(updateObject);
-
-    return newPlayer;
   }
 
   async getPlayers(userId: string): Promise<string[]> {

@@ -4,10 +4,11 @@ import { CreateTournamentDto } from './dto/create-tournament.dto';
 import * as admin from 'firebase-admin';
 import crypto from 'crypto';
 import { FieldValue } from 'firebase-admin/firestore';
-import { addPlayerDto } from './dto/add-player.dto';
 import { TournamentStatus } from './enum/tournament-status.enum';
 import mime from 'mime-types';
 import { bucket, gcsBucketName } from '../firebase/gcs.config';
+import { CreatePlayersDto } from 'src/users/dto/create-players.dto';
+// import { Players } from 'src/users/model/players.model';
 
 @Injectable()
 export class TournamentsService {
@@ -53,7 +54,7 @@ export class TournamentsService {
     return JSON.stringify(tournamentData);
   }
 
-  // TODO : creact a function to get the tournament simple (with the filter)
+  //TODO : Add the status handeling with the today day
   // To avoid code duplication, I'll do it later, don't worry ;)
   async getTournamentSimple() {
     const tournamentRef = this.firestore.collection('tournaments');
@@ -61,6 +62,7 @@ export class TournamentsService {
     const finished = [];
     const upcoming = [];
     const todays = [];
+    const today = new Date();
 
     tournamentsSnapshot.docs.forEach((tournamentDoc) => {
       const tournamentData = tournamentDoc.data();
@@ -73,20 +75,22 @@ export class TournamentsService {
       const image = tournamentData.image;
 
       const simplifiedTournament = { id, name, location, date, owner, image };
+      const tournamentDate = new Date(tournamentData.date);
+      console.log(name + '  ' + tournamentDate);
+      console.log(today);
+      // To compare only the date and not the time (todays tournament [TOCHECK])
+      tournamentDate.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
 
-      switch (tournamentData.status) {
-        case TournamentStatus.FINISHED:
-          finished.push(simplifiedTournament);
-          break;
-        case TournamentStatus.UPCOMING:
-          upcoming.push(simplifiedTournament);
-          break;
-        case TournamentStatus.ONGOING:
-          todays.push(simplifiedTournament);
-          break;
+      if (tournamentDate < today) {
+        finished.push(simplifiedTournament);
+      } else if (tournamentDate > today) {
+        upcoming.push(simplifiedTournament);
+      } else {
+        todays.push(simplifiedTournament); // [TOCHECK] if we make else as upcoming or finished ?
       }
     });
-    // console.log({ finished });
+
     return JSON.stringify({ finished, upcoming, todays });
   }
 
@@ -190,34 +194,114 @@ export class TournamentsService {
     }
   }
 
-  async addPlayer(id: string, user: string, playerId: string) {
-    const tournamentRef = this.firestore.collection('tournaments').doc(id);
-    const userRef = this.firestore.collection('users').doc(user);
-    // console.log(id, user, playerId); // for debugg
-    // console.log(tournamentRef);
+  async createPlayer(
+    tournamentId: string,
+    player: CreatePlayersDto, // to changer any by the type
+  ): Promise<any> {
+    const playerId = crypto.randomUUID();
+    const newPlayer = {
+      name: player.name,
+      id: playerId,
+      stats: {
+        games: 0,
+        id: tournamentId,
+        won: 0,
+      },
+    };
+    const tournamentRef = this.firestore
+      .collection('tournaments')
+      .doc(tournamentId);
+    const tournamentSnapshot = await tournamentRef.get();
+    const userId = tournamentSnapshot.data().owner;
+    const userRef = this.firestore.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) {
+      throw new Error('User not found');
+    }
+    const updateObject = {};
+    updateObject[`players.${playerId}`] = newPlayer;
+    await userRef.update(updateObject);
+
     await tournamentRef.update({
       players: FieldValue.arrayUnion(playerId),
     });
-    const newStat = {
-      games: 0,
-      id: id,
-      won: 0,
-    };
-    const fieldPath = `players.${playerId}.stats.${id}`;
-    await userRef.update({
-      [fieldPath]: newStat,
-    });
-
-    return JSON.stringify(newStat);
+    return newPlayer;
   }
 
-  async removePlayer(id: string, player: addPlayerDto) {
+  async addPlayer(id: string, playerId: string) {
+    const tournamentRef = this.firestore.collection('tournaments').doc(id);
+
+    await tournamentRef.update({
+      players: FieldValue.arrayUnion(playerId),
+    });
+
+    return JSON.stringify(playerId);
+  }
+
+  async getTournamentPlayers(
+    tournamentId: string,
+  ): Promise<{ id: string; name: string }[]> {
+    const tournamentRef = this.firestore
+      .collection('tournaments')
+      .doc(tournamentId);
+    const tournamentDoc = await tournamentRef.get();
+
+    if (!tournamentDoc.exists) {
+      throw new Error('Tournament not found');
+    }
+
+    const tournamentData = tournamentDoc.data();
+    const userRef = this.firestore
+      .collection('users')
+      .doc(tournamentData.owner);
+    const userDoc = await userRef.get();
+    const userData = userDoc.data();
+
+    const playersIn = tournamentData.players.map((playerId: string) => {
+      const player = userData.players[playerId];
+      return { id: playerId, name: player.name };
+    });
+
+    return playersIn;
+  }
+
+  async getPlayersNotInTournament(
+    tournamentId: string,
+  ): Promise<{ id: string; name: string }[]> {
+    const tournamentRef = this.firestore
+      .collection('tournaments')
+      .doc(tournamentId);
+    const tournamentDoc = await tournamentRef.get();
+
+    if (!tournamentDoc.exists) {
+      throw new Error('Tournament not found');
+    }
+
+    const tournamentData = tournamentDoc.data();
+
+    const userRef = this.firestore
+      .collection('users')
+      .doc(tournamentData.owner);
+    const userDoc = await userRef.get();
+    const userData = userDoc.data();
+
+    const playersNotInTournament = Object.keys(userData.players)
+      .filter((playerId) => !tournamentData.players.includes(playerId))
+      .map((playerId) => {
+        const player = userData.players[playerId];
+        return { id: playerId, name: player.name };
+      });
+
+    return playersNotInTournament;
+  }
+
+  async removePlayer(id: string, playerId: string) {
     const tournamentRef = this.firestore.collection('tournaments').doc(id);
     const tournamentSnapshot = await tournamentRef.get();
     const tournamentData = tournamentSnapshot.data();
 
     const players = tournamentData.players;
-    const playersWithoutplayer = players.filter((p) => p !== player.id);
+    const playersWithoutplayer = players.filter((p: string) => p !== playerId);
 
     const res = tournamentRef.update({
       players: playersWithoutplayer,
@@ -299,6 +383,7 @@ export class TournamentsService {
 
 //A randomized algorithm to generate a round that is as good as possible
 //TODO take gender into account
+
 const generateRound = (tournamentData, userPlayers) => {
   const playersInactiveArray = tournamentData.playersInactive;
   const playersInactiveLength = playersInactiveArray.length;
