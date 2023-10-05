@@ -43,7 +43,7 @@ export class TournamentsService {
     return JSON.stringify(tournamentData);
   }
 
-  // TODO : creact a function to get the tournament simple (with the filter)
+  //TODO : Add the status handeling with the today day
   // To avoid code duplication, I'll do it later, don't worry ;)
   async getTournamentSimple() {
     const tournamentRef = this.firestore.collection('tournaments');
@@ -289,6 +289,7 @@ export class TournamentsService {
 
 //A randomized algorithm to generate a round that is as good as possible
 //TODO take gender into account
+
 const generateRound = (tournamentData, userPlayers) => {
   const playersInactiveArray = tournamentData.playersInactive;
   const playersInactiveLength = playersInactiveArray.length;
