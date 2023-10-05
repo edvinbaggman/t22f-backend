@@ -47,6 +47,9 @@ export class TournamentsService {
     const tournamentRef = this.firestore.collection('tournaments').doc(id);
     const tournamentSnapshot = await tournamentRef.get();
     const tournamentData = tournamentSnapshot.data();
+
+    tournamentData.leaderboard = createLeaderboard(tournamentData);
+
     return JSON.stringify(tournamentData);
   }
 
@@ -522,3 +525,60 @@ async function uploadImage(file: Express.Multer.File) {
   }
   return publicUrl;
 }
+
+function sortLeaderboard(playerA, playerB) {
+  if (playerA.won !== playerB.won) {
+    return playerB.won - playerA.won;
+  }
+
+  if (playerA.pointDiff !== playerB.pointDiff) {
+    return playerB.pointDiff - playerA.pointDiff;
+  }
+
+  return playerA.matches - playerB.matches;
+}
+
+const createLeaderboard = (tournamentData) => {
+  const leaderboard = {};
+
+  for (const player of tournamentData.players) {
+    leaderboard[player] = {
+      player: player,
+      matches: 0,
+      won: 0,
+      pointDiff: 0,
+    };
+  }
+
+  for (const roundId of Object.keys(tournamentData.rounds)) {
+    for (const matchId of Object.keys(tournamentData.rounds[roundId])) {
+      const match = tournamentData.rounds[roundId][matchId];
+      const team1player1 = match.team1.players[0];
+      const team1player2 = match.team1.players[1];
+      const team2player1 = match.team2.players[0];
+      const team2player2 = match.team2.players[1];
+      const pointsTeam1 = match.team1.points ? Number(match.team1.points) : 0;
+      const pointsTeam2 = match.team2.points ? Number(match.team2.points) : 0;
+      const pointDiffTeam1 = pointsTeam1 - pointsTeam2;
+      const pointDiffTeam2 = pointsTeam2 - pointsTeam1;
+      if (pointDiffTeam1 > 0) {
+        leaderboard[team1player1].won += 1;
+        leaderboard[team1player2].won += 1;
+      } else if (pointDiffTeam2 > 0) {
+        leaderboard[team2player1].won += 1;
+        leaderboard[team2player2].won += 1;
+      }
+      leaderboard[team1player1].matches += 1;
+      leaderboard[team1player2].matches += 1;
+      leaderboard[team2player1].matches += 1;
+      leaderboard[team2player2].matches += 1;
+      leaderboard[team1player1].pointDiff += pointDiffTeam1;
+      leaderboard[team1player2].pointDiff += pointDiffTeam1;
+      leaderboard[team2player1].pointDiff += pointsTeam2;
+      leaderboard[team2player2].pointDiff += pointsTeam2;
+    }
+  }
+  const leaderboardArray = Object.values(leaderboard);
+  leaderboardArray.sort(sortLeaderboard);
+  return leaderboardArray;
+};
