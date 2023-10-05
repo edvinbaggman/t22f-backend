@@ -8,6 +8,7 @@ import {
   Delete,
   UseInterceptors,
   UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   // ApiBearerAuth,
@@ -20,10 +21,17 @@ import { CreateTournamentDto } from './dto/create-tournament.dto';
 import { matchResultDto } from './dto/match-result.dto';
 import { addPlayerDto } from './dto/add-player.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { bucket, gcsBucketName } from '../firebase/gcs.config';
-// import { bucket, gcsBucketName } from 'src/firebase/gcs.config';
-import mime from 'mime-types';
-import crypto from 'crypto';
+import { IsNotEmpty, IsString, validate } from 'class-validator';
+
+export class testClass {
+  @IsNotEmpty()
+  @IsString()
+  name: string;
+
+  @IsNotEmpty()
+  @IsString()
+  age: string;
+}
 
 @ApiTags('tournaments')
 @Controller('tournaments')
@@ -31,9 +39,25 @@ export class TournamentsController {
   constructor(private readonly tournamentsService: TournamentsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Creat Tournament' })
-  create(@Body() createTournamentDto: CreateTournamentDto) {
-    return this.tournamentsService.create(createTournamentDto);
+  @ApiOperation({ summary: 'Create Tournament' })
+  @UseInterceptors(FileInterceptor('file'))
+  async create(
+    @Body('form') body: any, //Body gets validated manually instead
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    const bodyParsed = JSON.parse(body);
+    const createTournamentDto = new CreateTournamentDto();
+
+    for (const key in bodyParsed) {
+      createTournamentDto[key] = bodyParsed[key];
+    }
+    const errors = await validate(createTournamentDto);
+
+    if (errors.length > 0) {
+      throw new BadRequestException('Invalid form');
+    }
+
+    return this.tournamentsService.create(createTournamentDto, file);
   }
 
   @Get()
@@ -64,42 +88,6 @@ export class TournamentsController {
   @ApiOperation({ summary: 'Generate New Round' })
   generateNewRound(@Param('id') id: string) {
     return this.tournamentsService.generateNewRound(id);
-  }
-
-  //This is just a test request to upload files. Will be added to create tournament
-  @Post(':id/upload')
-  @UseInterceptors(FileInterceptor('file'))
-  uploadFile(
-    @Param('id') id: string,
-    @UploadedFile() file: Express.Multer.File,
-  ) {
-    if (file && file.buffer instanceof Buffer) {
-      try {
-        const fileType = mime.extension(file.mimetype);
-        const fileId = crypto.randomUUID();
-        const fileName = `${fileId}.${fileType}`;
-        const blob = bucket.file(fileName);
-        const blobStream = blob.createWriteStream({
-          resumable: false,
-          gzip: true,
-        });
-
-        blobStream.on('error', (err) => {
-          throw err;
-        });
-
-        blobStream.on('finish', () => {
-          const publicUrl = `https://storage.googleapis.com/${gcsBucketName}/${fileName}`;
-          console.log('File uploaded to:', publicUrl);
-        });
-
-        blobStream.end(file.buffer);
-      } catch (error) {
-        console.error('Error uploading file:', error);
-      }
-    } else {
-      console.error('Invalid file format or buffer missing.');
-    }
   }
 
   @Patch(':id')
