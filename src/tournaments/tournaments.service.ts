@@ -632,6 +632,7 @@ const createLeaderboard = (tournamentData) => {
       matches: 0,
       won: 0,
       pointDiff: 0,
+      lastMatches: [],
     };
   }
 
@@ -649,9 +650,22 @@ const createLeaderboard = (tournamentData) => {
       if (pointDiffTeam1 > 0) {
         leaderboard[team1player1].won += 1;
         leaderboard[team1player2].won += 1;
+        leaderboard[team1player1].lastMatches.push('won');
+        leaderboard[team1player2].lastMatches.push('won');
+        leaderboard[team2player1].lastMatches.push('loss');
+        leaderboard[team2player2].lastMatches.push('loss');
       } else if (pointDiffTeam2 > 0) {
         leaderboard[team2player1].won += 1;
         leaderboard[team2player2].won += 1;
+        leaderboard[team2player1].lastMatches.push('won');
+        leaderboard[team2player2].lastMatches.push('won');
+        leaderboard[team1player1].lastMatches.push('loss');
+        leaderboard[team1player2].lastMatches.push('loss');
+      } else {
+        leaderboard[team1player1].lastMatches.push('draw');
+        leaderboard[team1player2].lastMatches.push('draw');
+        leaderboard[team2player1].lastMatches.push('draw');
+        leaderboard[team2player2].lastMatches.push('draw');
       }
       leaderboard[team1player1].matches += 1;
       leaderboard[team1player2].matches += 1;
