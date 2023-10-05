@@ -53,25 +53,6 @@ export class UsersController {
     return this.userService.createUser(createUsersDto);
   }
 
-  @Patch(':userId/createPlayer')
-  @ApiOperation({ summary: 'Create a player' })
-  @ApiBearerAuth()
-  // @UseGuards(FirebaseAuthGuard) // To add later when we will use authentication
-  @ApiResponse({
-    status: 200,
-    description:
-      'The player has been successfully created and added to the user.',
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  @ApiResponse({ status: 404, description: 'User not found.' })
-  @ApiResponse({ status: 400, description: 'Bad Request.' })
-  createPlayer(
-    @Param('userId') userId: string,
-    @Body() createPlayerDto: CreatePlayersDto,
-  ) {
-    return this.userService.createPlayer(userId, createPlayerDto);
-  }
-
   @Get(':userId/playersNames')
   @ApiOperation({ summary: 'Get names of all players of a user' })
   @ApiBearerAuth()
