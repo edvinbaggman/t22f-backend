@@ -44,6 +44,28 @@ export class TournamentsService {
     return JSON.stringify(allTournamentsData);
   }
 
+  /**
+   * return an array of players (Id and Name) in the tournament
+   *
+   * @param {admin.firestore.DocumentData} tournamentData - Firebase document data of the tournament.
+   * @returns {{ id: string; name: string }[]} - Array of players (Id and Name) in the tournament.
+   *
+   */
+  async getPlayers(
+    tournamentData: admin.firestore.DocumentData,
+  ): Promise<{ id: string; name: string }[]> {
+    const userRef = this.firestore
+      .collection('users')
+      .doc(tournamentData.owner);
+    const userDoc = await userRef.get();
+    const userData = userDoc.data();
+
+    return tournamentData.players.map((playerId: string) => {
+      const player = userData.players[playerId];
+      return { id: playerId, name: player.name };
+    });
+  }
+
   async findOne(id: string) {
     const tournamentRef = this.firestore.collection('tournaments').doc(id);
     const tournamentSnapshot = await tournamentRef.get();
@@ -51,6 +73,9 @@ export class TournamentsService {
 
     tournamentData.leaderboard = createLeaderboard(tournamentData);
 
+    const playersIn = await this.getPlayers(tournamentData);
+
+    tournamentData.players = playersIn;
     return JSON.stringify(tournamentData);
   }
 
