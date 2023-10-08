@@ -85,11 +85,10 @@ export class TournamentsService {
     const tournamentSnapshot = await tournamentRef.get();
     const tournamentData = tournamentSnapshot.data();
 
+    tournamentData.players = await this.getPlayers(tournamentData);
+
     tournamentData.leaderboard = createLeaderboard(tournamentData);
 
-    const playersIn = await this.getPlayers(tournamentData);
-
-    tournamentData.players = playersIn;
     return JSON.stringify(tournamentData);
   }
 
@@ -320,6 +319,7 @@ export class TournamentsService {
     }
     const updateObject = {};
     updateObject[`players.${playerId}`] = newPlayer;
+    //promise all
     await userRef.update(updateObject);
 
     await tournamentRef.update({
@@ -577,10 +577,12 @@ const generateRound = (tournamentData, userPlayers) => {
   let maximumNumberOfGames = Math.floor(
     (playersLength - playersInactiveLength) / 4,
   );
-  maximumNumberOfGames = Math.min(
-    maximumNumberOfGames,
-    tournamentData.maxSimultaneousGames,
+
+  const maxSimultaneousGames = Number(
+    tournamentData.settings.maxSimultaneousGames,
   );
+
+  maximumNumberOfGames = Math.min(maximumNumberOfGames, maxSimultaneousGames);
 
   const maximumNumberOfPlayers = maximumNumberOfGames * 4;
 
@@ -769,8 +771,11 @@ const createLeaderboard = (tournamentData) => {
   const leaderboard = {};
 
   for (const player of tournamentData.players) {
-    leaderboard[player] = {
-      player: player,
+    const playerId = player.id;
+    const playerName = player.name;
+    leaderboard[playerId] = {
+      player: playerId,
+      playerName: playerName,
       matches: 0,
       won: 0,
       pointDiff: 0,
@@ -815,8 +820,8 @@ const createLeaderboard = (tournamentData) => {
       leaderboard[team2player2].matches += 1;
       leaderboard[team1player1].pointDiff += pointDiffTeam1;
       leaderboard[team1player2].pointDiff += pointDiffTeam1;
-      leaderboard[team2player1].pointDiff += pointsTeam2;
-      leaderboard[team2player2].pointDiff += pointsTeam2;
+      leaderboard[team2player1].pointDiff += pointDiffTeam2;
+      leaderboard[team2player2].pointDiff += pointDiffTeam2;
     }
   }
   const leaderboardArray = Object.values(leaderboard);
