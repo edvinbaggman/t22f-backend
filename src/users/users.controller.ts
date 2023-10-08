@@ -20,6 +20,7 @@ import { CreateUsersDto } from './dto/create-users.dto';
 
 import { FirebaseAuthGuard } from '../firebase/firebase-auth.guard';
 import { CreatePlayersDto } from './dto/create-players.dto';
+import { RenameUserDto } from './dto/rename-users.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -35,10 +36,10 @@ export class UsersController {
   }
 
   @Get(':userId')
-  @ApiOperation({ summary: 'get one user' })
+  @ApiOperation({ summary: 'Get one user' })
   @ApiBearerAuth()
   @UseGuards(FirebaseAuthGuard)
-  @ApiResponse({ status: 200, description: 'Récupère un user.' })
+  @ApiResponse({ status: 200, description: 'Get a user.' })
   @ApiResponse({ status: 401, description: 'Non autorisé.' })
   @ApiResponse({ status: 404, description: 'User non trouvé.' })
   findOne(@Param('userId') userId: string) {
@@ -87,5 +88,18 @@ export class UsersController {
     @Param('playerId') playerId: string,
   ) {
     return this.userService.getTotalStats(userId, playerId);
+  }
+
+  @Patch(':userId/rename')
+  @ApiResponse({
+    status: 200,
+    description: 'The user has been successfully renamed.',
+  })
+  @ApiResponse({ status: 400, description: 'Bad Request.' })
+  async renameUser(
+    @Param('userId') userId: string,
+    @Body() renameUserDto: RenameUserDto,
+  ) {
+    return this.userService.renameUser(userId, renameUserDto);
   }
 }

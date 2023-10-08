@@ -4,11 +4,10 @@ import { CreateTournamentDto } from './dto/create-tournament.dto';
 import * as admin from 'firebase-admin';
 import crypto from 'crypto';
 import { FieldValue } from 'firebase-admin/firestore';
-import { TournamentStatus } from './enum/tournament-status.enum';
 import mime from 'mime-types';
 import { bucket, gcsBucketName } from '../firebase/gcs.config';
 import { CreatePlayersDto } from 'src/users/dto/create-players.dto';
-// import { Players } from 'src/users/model/players.model';
+import { IsimpleTournaments } from './interface/simpleTournaments.interface';
 
 @Injectable()
 export class TournamentsService {
@@ -35,7 +34,13 @@ export class TournamentsService {
     return JSON.stringify(res);
   }
 
-  async findAll() {
+  /**
+   * return an object of all tournaments.
+   *
+   * @returns {string} - Json string of all tournaments.
+   *
+   */
+  async findAll(): Promise<string> {
     const tournamentRef = this.firestore.collection('tournaments');
     const tournamentsSnapshot = await tournamentRef.get();
     const allTournamentsData = tournamentsSnapshot.docs.map((tournamentDoc) =>
@@ -66,8 +71,17 @@ export class TournamentsService {
     });
   }
 
-  async findOne(id: string) {
-    const tournamentRef = this.firestore.collection('tournaments').doc(id);
+  /**
+   * return an array of players (Id and Name) in the tournament
+   *
+   * @param {string} tournamentId - Id of the tournament.
+   * @returns {string} - Json string of the tournament.
+   *
+   */
+  async findOne(tournamentId: string): Promise<string> {
+    const tournamentRef = this.firestore
+      .collection('tournaments')
+      .doc(tournamentId);
     const tournamentSnapshot = await tournamentRef.get();
     const tournamentData = tournamentSnapshot.data();
 
@@ -79,9 +93,68 @@ export class TournamentsService {
     return JSON.stringify(tournamentData);
   }
 
-  //TODO : Add the status handeling with the today day
-  // To avoid code duplication, I'll do it later, don't worry ;)
-  async getTournamentSimple() {
+  /**
+   * Get simplified tournament information (id, name, location, date, owner, image)
+   *
+   * @param {admin.firestore.DocumentSnapshot} tournamentDoc - Firebase document snapshot of the tournament.
+   * @returns {IsimpleTournaments} - Object of simplified tournament information (id, name, location, date, owner, image).
+   *
+   */
+  private getSimplifiedTournament(
+    tournamentDoc: admin.firestore.DocumentSnapshot,
+  ): IsimpleTournaments {
+    const tournamentData = tournamentDoc.data();
+    const simpleTournament: IsimpleTournaments = {
+      id: '',
+      owner: '',
+      players: [],
+      date: '',
+      name: '',
+      image: '',
+      location: '',
+    };
+    simpleTournament.id = tournamentDoc.id;
+    simpleTournament.name = tournamentData.name;
+    simpleTournament.location = tournamentData.location;
+    simpleTournament.date = tournamentData.date;
+    simpleTournament.owner = tournamentData.owner;
+    simpleTournament.image = tournamentData.image;
+
+    return { ...simpleTournament };
+  }
+
+  /**
+   * Function to classify tournaments in finished, upcoming and todays
+   *
+   * @param tournament
+   * @param {date} today - Date of today.
+   * @returns {string} - String of the status of the tournament.
+   */
+  private classifyTournament(
+    tournament: IsimpleTournaments,
+    today: Date,
+  ): string {
+    const tournamentDate = new Date(tournament.date);
+    tournamentDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    if (tournamentDate < today) {
+      return 'finished';
+    } else if (tournamentDate > today) {
+      return 'upcoming';
+    } else {
+      return 'todays';
+    }
+  }
+
+  /**
+   * Filter simple tournament information (id, name, location, date, owner, image) with status (finished, upcoming, todays)
+   *
+   * @param {string} userId - Id of the user (optional).
+   * @returns {string} - Json string of tournaments information.
+   *
+   */
+  async getTournamentsSimple(userId?: string): Promise<string> {
     const tournamentRef = this.firestore.collection('tournaments');
     const tournamentsSnapshot = await tournamentRef.get();
     const finished = [];
@@ -90,73 +163,61 @@ export class TournamentsService {
     const today = new Date();
 
     tournamentsSnapshot.docs.forEach((tournamentDoc) => {
-      const tournamentData = tournamentDoc.data();
+      const tournament: IsimpleTournaments =
+        this.getSimplifiedTournament(tournamentDoc);
 
-      const id = tournamentDoc.id;
-      const name = tournamentData.name;
-      const location = tournamentData.location;
-      const date = tournamentData.date;
-      const owner = tournamentData.owner;
-      const image = tournamentData.image;
+      if (!userId || (userId && tournament.owner === userId)) {
+        const status = this.classifyTournament(tournament, today);
 
-      const simplifiedTournament = { id, name, location, date, owner, image };
-      const tournamentDate = new Date(tournamentData.date);
-      console.log(name + '  ' + tournamentDate);
-      console.log(today);
-      // To compare only the date and not the time (todays tournament [TOCHECK])
-      tournamentDate.setHours(0, 0, 0, 0);
-      today.setHours(0, 0, 0, 0);
-
-      if (tournamentDate < today) {
-        finished.push(simplifiedTournament);
-      } else if (tournamentDate > today) {
-        upcoming.push(simplifiedTournament);
-      } else {
-        todays.push(simplifiedTournament); // [TOCHECK] if we make else as upcoming or finished ?
-      }
-    });
-
-    return JSON.stringify({ finished, upcoming, todays });
-  }
-
-  async getUserTournamentSimple(userId: string) {
-    // [TODO] the check of user (if he exists or not befoure the forEach)
-    const tournamentRef = this.firestore.collection('tournaments');
-    const tournamentsSnapshot = await tournamentRef.get();
-    const finished = [];
-    const upcoming = [];
-    const todays = [];
-
-    tournamentsSnapshot.docs.forEach((tournamentDoc) => {
-      const tournamentData = tournamentDoc.data();
-      if (tournamentData.owner === userId) {
-        const id = tournamentDoc.id; // Assumant que le document ID est l'ID du tournoi
-        const name = tournamentData.name;
-        const location = tournamentData.location;
-        const date = tournamentData.date;
-        const owner = tournamentData.owner;
-        const image = tournamentData.image;
-
-        const simplifiedTournament = { id, name, location, date, owner, image };
-
-        switch (tournamentData.status) {
-          case TournamentStatus.FINISHED:
-            finished.push(simplifiedTournament);
+        switch (status) {
+          case 'finished':
+            finished.push(tournament);
             break;
-          case TournamentStatus.UPCOMING:
-            upcoming.push(simplifiedTournament);
+          case 'upcoming':
+            upcoming.push(tournament);
             break;
-          case TournamentStatus.ONGOING:
-            todays.push(simplifiedTournament);
+          case 'todays':
+            todays.push(tournament);
             break;
         }
       }
     });
+
     return JSON.stringify({ finished, upcoming, todays });
   }
 
-  async generateNewRound(id: string) {
-    const tournamentRef = this.firestore.collection('tournaments').doc(id);
+  /**
+   * return information about tournaments (id, name, location, date, owner, image) with status (finished, upcoming, todays)
+   *
+   * @returns {string} - Json string of tournaments information.
+   *
+   */
+  async getTournamentSimple(): Promise<string> {
+    return this.getTournamentsSimple();
+  }
+
+  /**
+   * return information about tournaments (id, name, location, date, owner, image) with status (finished, upcoming, todays) of a specific user
+   *
+   * @param {string} userId - Id of the user.
+   * @returns {string} - Json string of tournaments information.
+   *
+   */
+  async getUserTournamentSimple(userId: string): Promise<string> {
+    return this.getTournamentsSimple(userId);
+  }
+
+  /**
+   * Generate a new round for a tournament
+   *
+   * @param {string} tournamentId - Id of the tournament.
+   * @returns {string} - Json string of update tournament with new round.
+   *
+   */
+  async generateNewRound(tournamentId: string): Promise<string> {
+    const tournamentRef = this.firestore
+      .collection('tournaments')
+      .doc(tournamentId);
     const tournamentSnapshot = await tournamentRef.get();
     const tournamentData = tournamentSnapshot.data();
     const userRef = this.firestore
@@ -176,8 +237,21 @@ export class TournamentsService {
     return JSON.stringify(res);
   }
 
-  async addScore(id: string, matchResultDto: matchResultDto) {
-    const tournamentRef = this.firestore.collection('tournaments').doc(id);
+  /**
+   * Add new score to a match
+   *
+   * @param {string} tournamentId - Id of the tournament.
+   * @param {matchResultDto} matchResultDto - Object of the match result.
+   * @returns {string} - Json string of update tournament with new score.
+   *
+   */
+  async addScore(
+    tournamentId: string,
+    matchResultDto: matchResultDto,
+  ): Promise<void> {
+    const tournamentRef = this.firestore
+      .collection('tournaments')
+      .doc(tournamentId);
 
     const updateObject1 = {};
     updateObject1[
@@ -210,7 +284,7 @@ export class TournamentsService {
             this.addStatsPlayer(
               tournementData.owner,
               player,
-              id,
+              tournamentId,
               pointsDiff * teamCoef,
             );
           }
@@ -221,8 +295,9 @@ export class TournamentsService {
 
   async createPlayer(
     tournamentId: string,
-    player: CreatePlayersDto, // to changer any by the type
+    player: CreatePlayersDto,
   ): Promise<any> {
+    // TODO: change any to Players
     const playerId = crypto.randomUUID();
     const newPlayer = {
       name: player.name,
@@ -250,11 +325,22 @@ export class TournamentsService {
     await tournamentRef.update({
       players: FieldValue.arrayUnion(playerId),
     });
+
     return newPlayer;
   }
 
-  async addPlayer(id: string, playerId: string) {
-    const tournamentRef = this.firestore.collection('tournaments').doc(id);
+  /**
+   * Add a user player to a tournament
+   *
+   * @param {string} tournamentid - Id of the tournament.
+   * @param {string} playerId - Id of the player.
+   * @returns {string} - Json string of the player id.
+   *
+   */
+  async addPlayer(tournamentid: string, playerId: string): Promise<string> {
+    const tournamentRef = this.firestore
+      .collection('tournaments')
+      .doc(tournamentid);
 
     await tournamentRef.update({
       players: FieldValue.arrayUnion(playerId),
@@ -263,6 +349,13 @@ export class TournamentsService {
     return JSON.stringify(playerId);
   }
 
+  /**
+   * Get Players (Id and Name) in a tournament
+   *
+   * @param {string} tournamentId - Id of the tournament.
+   * @returns {{ string; string }[]} - Array of players (Id and Name) in the tournament.
+   *
+   */
   async getTournamentPlayers(
     tournamentId: string,
   ): Promise<{ id: string; name: string }[]> {
@@ -290,6 +383,13 @@ export class TournamentsService {
     return playersIn;
   }
 
+  /**
+   * Get Players (Id and Name) not in a tournament
+   *
+   * @param {string} tournamentId - Id of the tournament.
+   * @returns {{ string; string }[]} - Array of players (Id and Name) not in the tournament.
+   *
+   */
   async getPlayersNotInTournament(
     tournamentId: string,
   ): Promise<{ id: string; name: string }[]> {
@@ -320,8 +420,18 @@ export class TournamentsService {
     return playersNotInTournament;
   }
 
-  async removePlayer(id: string, playerId: string) {
-    const tournamentRef = this.firestore.collection('tournaments').doc(id);
+  /**
+   * Remouve a player from a tournament
+   *
+   * @param {string} tournamentId - Id of the tournament.
+   * @param {string} playerId - Id of the player.
+   * @returns {string} - Json string of the player id.
+   *
+   * */
+  async removePlayer(tournamentId: string, playerId: string): Promise<string> {
+    const tournamentRef = this.firestore
+      .collection('tournaments')
+      .doc(tournamentId);
     const tournamentSnapshot = await tournamentRef.get();
     const tournamentData = tournamentSnapshot.data();
 
@@ -334,7 +444,14 @@ export class TournamentsService {
     return JSON.stringify(res);
   }
 
-  async remove(id: string) {
+  /**
+   * Delete a tournament
+   *
+   * @param {string} id - Id of the tournament.
+   * @returns {string} - Json string of the result.
+   *
+   * */
+  async remove(id: string): Promise<string> {
     const tournamentRef = this.firestore.collection('tournaments').doc(id);
     const res = await tournamentRef.delete();
 
