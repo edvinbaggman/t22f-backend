@@ -301,11 +301,7 @@ export class TournamentsService {
     const newPlayer = {
       name: player.name,
       id: playerId,
-      stats: {
-        games: 0,
-        id: tournamentId,
-        won: 0,
-      },
+      stats: {},
     };
     const tournamentRef = this.firestore
       .collection('tournaments')
@@ -480,7 +476,11 @@ export class TournamentsService {
       !userData.players[playerId].stats ||
       !userData.players[playerId].stats[tournamentId]
     ) {
-      throw new Error('Stat tournament not found');
+      userData.players[playerId].stats[tournamentId] = {
+        games: 0,
+        won: 0,
+        points: 0,
+      };
     }
     let currentGames =
       userData.players[playerId].stats[tournamentId].games || 0;
