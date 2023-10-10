@@ -16,7 +16,7 @@ RUN npm install
 COPY . .
 
 # Exposez le port que NestJS utilise (par défaut c'est 3000)
-EXPOSE 3100
+EXPOSE 8080
 
 # Définissez la commande pour exécuter votre application
 CMD ["npm", "run", "start"]
