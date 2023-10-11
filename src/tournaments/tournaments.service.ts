@@ -259,18 +259,16 @@ export class TournamentsService {
       .collection('tournaments')
       .doc(tournamentId);
 
-    const updateObject1 = {};
-    updateObject1[
+    const updateObject = {};
+    updateObject[
       `rounds.${matchResultDto.round}.${matchResultDto.match}.team1.points`
     ] = matchResultDto.team1Points;
-    const updateObject2 = {};
-    updateObject2[
+    updateObject[
       `rounds.${matchResultDto.round}.${matchResultDto.match}.team2.points`
     ] = matchResultDto.team2Points;
 
-    tournamentRef.update(updateObject1);
-    tournamentRef.update(updateObject2);
-
+    await tournamentRef.update(updateObject);
+    /*
     const pointsDiff = matchResultDto.team1Points - matchResultDto.team2Points;
 
     const tournementDoc = await tournamentRef.get();
@@ -297,6 +295,7 @@ export class TournamentsService {
         }
       }
     }
+    */
   }
 
   async createPlayer(
