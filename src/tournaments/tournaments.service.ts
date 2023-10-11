@@ -1,3 +1,4 @@
+import { UpdateTournamentDto } from './dto/update-tournament.dto';
 import { matchResultDto } from './dto/match-result.dto';
 import { Injectable } from '@nestjs/common';
 import { CreateTournamentDto } from './dto/create-tournament.dto';
@@ -31,6 +32,12 @@ export class TournamentsService {
       image: imageUrl,
     };
     const res = await tournamentRef.set(newTournament);
+    return JSON.stringify(res);
+  }
+
+  async updateTournament(id: string, updateTournamentDto: UpdateTournamentDto) {
+    const tournamentRef = this.firestore.collection('tournaments').doc(id);
+    const res = await tournamentRef.update({ ...updateTournamentDto });
     return JSON.stringify(res);
   }
 
