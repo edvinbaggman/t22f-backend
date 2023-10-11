@@ -82,12 +82,17 @@ export class UsersController {
     return this.userService.renamePlayer(userId, playerId, renamePlayerDto);
   }
 
-  @Patch(':userId/players/:playerId/getTotalStats')
+  @Get(':userId/players/:playerId/getTotalStats')
   getTotalStats(
     @Param('userId') userId: string,
     @Param('playerId') playerId: string,
   ) {
     return this.userService.getTotalStats(userId, playerId);
+  }
+
+  @Get(':userId/getLeaderboard')
+  getLeaderboard(@Param('userId') userId: string) {
+    return this.userService.getLeaderboard(userId);
   }
 
   @Patch(':userId/rename')

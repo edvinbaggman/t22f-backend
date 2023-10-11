@@ -164,6 +164,50 @@ export class UsersService {
     };
   }
 
+  async getLeaderboard(userId: string) {
+    const userRef = this.firestore.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) {
+      throw new Error('User not found');
+    }
+    const userData = userDoc.data();
+
+    const leaderboard = [];
+
+    for (const playerId in userData.players) {
+      const player = userData.players[playerId];
+      const stats = {
+        id: player.id,
+        name: player.name,
+        games: 0,
+        won: 0,
+        points: 0,
+      };
+      for (const tournamentId in player.stats) {
+        stats.games += player.stats[tournamentId].games;
+        stats.won += player.stats[tournamentId].won;
+        stats.points += player.stats[tournamentId].points;
+      }
+      leaderboard.push(stats);
+    }
+
+    leaderboard.sort((a, b) => {
+      // Sort by won matches (descending order)
+      if (a.won !== b.won) {
+        return b.won - a.won;
+      }
+
+      // Sort by points (descending order)
+      if (a.points !== b.points) {
+        return b.points - a.points;
+      }
+
+      // Sort by least games played (ascending order)
+      return a.matches - b.matches;
+    });
+    return leaderboard;
+  }
+
   /**
    * Rename a user
    *
