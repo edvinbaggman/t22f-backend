@@ -1,7 +1,7 @@
 import { Tournaments } from './tournaments.model';
 
 export class Players {
-  id: string;
+  id?: string;
   name: string;
   stats: Tournaments;
 }

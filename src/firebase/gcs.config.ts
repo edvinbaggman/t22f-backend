@@ -8,5 +8,5 @@ const storage = new Storage({
   credentials: JSON.parse(process.env.GCP_KEY),
 });
 
-export const gcsBucketName = 'takes-two-to-fwango.appspot.com'; // Replace with your GCS bucket name
+export const gcsBucketName = 'takes-two-to-fwango.appspot.com';
 export const bucket = storage.bucket(gcsBucketName);

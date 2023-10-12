@@ -243,6 +243,66 @@ export class TournamentsService {
     return JSON.stringify(res);
   }
 
+  async addStatsPlayer(
+    userId: string,
+    playerId: string,
+    tournamentId: string,
+    points: number,
+  ) {
+    const userRef = this.firestore.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) {
+      throw new Error('User not found');
+    }
+    const userData = userDoc.data();
+
+    if (!userData.players || !userData.players[playerId]) {
+      throw new Error('Player not found');
+    }
+    const fieldPath = `players.${playerId}.stats.${tournamentId}`;
+
+    if (
+      !userData.players[playerId].stats ||
+      !userData.players[playerId].stats[tournamentId]
+    ) {
+      userData.players[playerId].stats[tournamentId] = {
+        games: 0,
+        won: 0,
+        points: 0,
+      };
+    }
+    let currentGames =
+      userData.players[playerId].stats[tournamentId].games || 0;
+    let currentWon = userData.players[playerId].stats[tournamentId].won || 0;
+    let currentPoints =
+      userData.players[playerId].stats[tournamentId].points || 0;
+    currentGames += 1;
+    currentPoints += points;
+    if (points > 0) {
+      currentWon += 1;
+    }
+    console.log(currentGames, currentWon, currentPoints);
+    await userRef.update({
+      [fieldPath]: {
+        games: currentGames,
+        won: currentWon,
+        points: currentPoints,
+      },
+    });
+    return { currentGames, currentWon, currentPoints };
+  }
+
+  async processPlayers(
+    team: { players: string[] },
+    owner: string,
+    tournamentId: string,
+    pointsDiff: number,
+  ) {
+    for (const playerId of team.players) {
+      this.addStatsPlayer(owner, playerId, tournamentId, pointsDiff);
+    }
+  }
+
   /**
    * Add new score to a match
    *
@@ -268,34 +328,26 @@ export class TournamentsService {
     ] = matchResultDto.team2Points;
 
     await tournamentRef.update(updateObject);
-    /*
-    const pointsDiff = matchResultDto.team1Points - matchResultDto.team2Points;
-
+    console.log(matchResultDto);
     const tournementDoc = await tournamentRef.get();
     const tournementData = tournementDoc.data();
-    for (const roundKey in tournementData.rounds) {
-      const round = tournementData.rounds[roundKey];
-      for (const matchKey in round) {
-        const match = round[matchKey];
-        for (const teamKey in match) {
-          let teamCoef = 1;
-          if (teamKey === 'team2') {
-            teamCoef = -1;
-          }
-          const team = match[teamKey];
-          for (const playerKey in team.players) {
-            const player = team.players[playerKey];
-            this.addStatsPlayer(
-              tournementData.owner,
-              player,
-              tournamentId,
-              pointsDiff * teamCoef,
-            );
-          }
-        }
-      }
-    }
-    */
+
+    const pointsDiff = matchResultDto.team1Points - matchResultDto.team2Points;
+    const match = tournementData.rounds[matchResultDto.round];
+    console.log(match);
+
+    this.processPlayers(
+      match[matchResultDto.match].team1,
+      tournementData.owner,
+      tournamentId,
+      pointsDiff * 1,
+    );
+    this.processPlayers(
+      match[matchResultDto.match].team2,
+      tournementData.owner,
+      tournamentId,
+      pointsDiff * -1,
+    );
   }
 
   async createPlayer(
@@ -465,54 +517,6 @@ export class TournamentsService {
     const res = await tournamentRef.delete();
 
     return JSON.stringify(res);
-  }
-
-  async addStatsPlayer(
-    userId: string,
-    playerId: string,
-    tournamentId: string,
-    points: number,
-  ) {
-    const userRef = this.firestore.collection('users').doc(userId);
-    const userDoc = await userRef.get();
-    if (!userDoc.exists) {
-      throw new Error('User not found');
-    }
-    const userData = userDoc.data();
-
-    if (!userData.players || !userData.players[playerId]) {
-      throw new Error('Player not found');
-    }
-    const fieldPath = `players.${playerId}.stats.${tournamentId}`;
-
-    if (
-      !userData.players[playerId].stats ||
-      !userData.players[playerId].stats[tournamentId]
-    ) {
-      userData.players[playerId].stats[tournamentId] = {
-        games: 0,
-        won: 0,
-        points: 0,
-      };
-    }
-    let currentGames =
-      userData.players[playerId].stats[tournamentId].games || 0;
-    let currentWon = userData.players[playerId].stats[tournamentId].won || 0;
-    let currentPoints =
-      userData.players[playerId].stats[tournamentId].points || 0;
-    currentGames += 1;
-    currentPoints += points;
-    if (points > 0) {
-      currentWon += 1;
-    }
-    await userRef.update({
-      [fieldPath]: {
-        games: currentGames,
-        won: currentWon,
-        points: currentPoints,
-      },
-    });
-    return { currentGames, currentWon, currentPoints };
   }
 }
 
