@@ -6,7 +6,7 @@ import crypto from 'crypto';
 import { FieldValue } from 'firebase-admin/firestore';
 import mime from 'mime-types';
 import { bucket, gcsBucketName } from '../firebase/gcs.config';
-import { CreatePlayersDto } from 'src/users/dto/create-players.dto';
+import { CreatePlayersDto } from '../users/dto/create-players.dto';
 import { IsimpleTournaments } from './interface/simpleTournaments.interface';
 
 @Injectable()

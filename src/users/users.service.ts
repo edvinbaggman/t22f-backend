@@ -34,7 +34,7 @@ export class UsersService {
    *
    * @example
    * findOne('123456789')
-   * // returns { id: '123456789', name: 'John Doe', email: 'john.doe@example', players: {} } 
+   * // returns { id: '123456789', name: 'John Doe', email: 'john.doe@example', players: {} }
    *
    */
   async findOne(userId: string): Promise<Users> {
@@ -106,7 +106,7 @@ export class UsersService {
     userId: string,
     playerId: string,
     renamePlayerDto: CreatePlayersDto,
-  ): Promise<any> {
+  ): Promise<CreatePlayersDto> {
     const userRef = this.firestore.collection('users').doc(userId);
     const userDoc = await userRef.get();
     if (!userDoc.exists) {
