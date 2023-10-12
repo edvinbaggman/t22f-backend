@@ -346,6 +346,7 @@ export class TournamentsService {
 
     await tournamentRef.update({
       players: FieldValue.arrayUnion(playerId),
+      playersInactive: FieldValue.arrayRemove(playerId),
     });
 
     return JSON.stringify(playerId);
@@ -434,15 +435,11 @@ export class TournamentsService {
     const tournamentRef = this.firestore
       .collection('tournaments')
       .doc(tournamentId);
-    const tournamentSnapshot = await tournamentRef.get();
-    const tournamentData = tournamentSnapshot.data();
 
-    const players = tournamentData.players;
-    const playersWithoutplayer = players.filter((p: string) => p !== playerId);
-
-    const res = tournamentRef.update({
-      players: playersWithoutplayer,
+    const res = await tournamentRef.update({
+      playersInactive: FieldValue.arrayUnion(playerId),
     });
+
     return JSON.stringify(res);
   }
 
