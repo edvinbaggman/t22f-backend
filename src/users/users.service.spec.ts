@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
 import { Users } from './model/users.model';
 import { RenameUserDto } from './dto/rename-users.dto';
-import { CreateUsersDto } from './dto/create-users.dto';
+// import { CreateUsersDto } from './dto/create-users.dto';
 
 describe('UsersService', () => {
   let service: UsersService;
