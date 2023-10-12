@@ -9,6 +9,7 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  Put,
 } from '@nestjs/common';
 import {
   // ApiBearerAuth,
@@ -24,6 +25,7 @@ import { matchResultDto } from './dto/match-result.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { IsNotEmpty, IsString, validate } from 'class-validator';
 import { CreatePlayersDto } from '../users/dto/create-players.dto';
+import { UpdateTournamentDto } from './dto/update-tournament.dto';
 
 export class testClass {
   @IsNotEmpty()
@@ -86,10 +88,13 @@ export class TournamentsController {
     return this.tournamentsService.findOne(id);
   }
 
-  @Post(':id')
-  @ApiOperation({ summary: 'Generate New Round' })
-  generateNewRound(@Param('id') id: string) {
-    return this.tournamentsService.generateNewRound(id);
+  @Put(':id')
+  @ApiOperation({ summary: 'Edit tournament' })
+  generateNewRound(
+    @Param('id') id: string,
+    @Body() updateTournamentDto: UpdateTournamentDto,
+  ) {
+    return this.tournamentsService.updateTournament(id, updateTournamentDto);
   }
 
   @Patch(':id')

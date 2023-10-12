@@ -1,3 +1,4 @@
+import { UpdateTournamentDto } from './dto/update-tournament.dto';
 import { matchResultDto } from './dto/match-result.dto';
 import { Injectable } from '@nestjs/common';
 import { CreateTournamentDto } from './dto/create-tournament.dto';
@@ -31,6 +32,12 @@ export class TournamentsService {
       image: imageUrl,
     };
     const res = await tournamentRef.set(newTournament);
+    return JSON.stringify(res);
+  }
+
+  async updateTournament(id: string, updateTournamentDto: UpdateTournamentDto) {
+    const tournamentRef = this.firestore.collection('tournaments').doc(id);
+    const res = await tournamentRef.update({ ...updateTournamentDto });
     return JSON.stringify(res);
   }
 
@@ -252,18 +259,16 @@ export class TournamentsService {
       .collection('tournaments')
       .doc(tournamentId);
 
-    const updateObject1 = {};
-    updateObject1[
+    const updateObject = {};
+    updateObject[
       `rounds.${matchResultDto.round}.${matchResultDto.match}.team1.points`
     ] = matchResultDto.team1Points;
-    const updateObject2 = {};
-    updateObject2[
+    updateObject[
       `rounds.${matchResultDto.round}.${matchResultDto.match}.team2.points`
     ] = matchResultDto.team2Points;
 
-    tournamentRef.update(updateObject1);
-    tournamentRef.update(updateObject2);
-
+    await tournamentRef.update(updateObject);
+    /*
     const pointsDiff = matchResultDto.team1Points - matchResultDto.team2Points;
 
     const tournementDoc = await tournamentRef.get();
@@ -290,6 +295,7 @@ export class TournamentsService {
         }
       }
     }
+    */
   }
 
   async createPlayer(
@@ -301,11 +307,7 @@ export class TournamentsService {
     const newPlayer = {
       name: player.name,
       id: playerId,
-      stats: {
-        games: 0,
-        id: tournamentId,
-        won: 0,
-      },
+      stats: {},
     };
     const tournamentRef = this.firestore
       .collection('tournaments')
@@ -480,7 +482,11 @@ export class TournamentsService {
       !userData.players[playerId].stats ||
       !userData.players[playerId].stats[tournamentId]
     ) {
-      throw new Error('Stat tournament not found');
+      userData.players[playerId].stats[tournamentId] = {
+        games: 0,
+        won: 0,
+        points: 0,
+      };
     }
     let currentGames =
       userData.players[playerId].stats[tournamentId].games || 0;
