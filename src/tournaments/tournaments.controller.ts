@@ -24,7 +24,7 @@ import { CreateTournamentDto } from './dto/create-tournament.dto';
 import { matchResultDto } from './dto/match-result.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { IsNotEmpty, IsString, validate } from 'class-validator';
-import { CreatePlayersDto } from 'src/users/dto/create-players.dto';
+import { CreatePlayersDto } from './dto/create-players.dto';
 import { UpdateTournamentDto } from './dto/update-tournament.dto';
 
 export class testClass {

@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 import { Users } from './model/users.model';
 import { CreateUsersDto } from './dto/create-users.dto';
-import { CreatePlayersDto } from './dto/create-players.dto';
 import { ITotalStats } from './interface/stats.interface';
 import { RenameUserDto } from './dto/rename-users.dto';
+import { RenamePlayersDto } from './dto/rename-player.dto';
 
 @Injectable()
 export class UsersService {
@@ -96,8 +96,8 @@ export class UsersService {
    *
    * @param {string} userId - The id of the user
    * @param {string} playerId - The id of the player
-   * @param {CreatePlayersDto} renamePlayerDto - The new name of the player
-   * @returns {CreatePlayersDto} The new name of the player
+   * @param {RenamePlayersDto} renamePlayerDto - The new name of the player
+   * @returns {RenamePlayersDto} The new name of the player
    *
    * @throws {Error} If the user is not found
    *
@@ -105,7 +105,7 @@ export class UsersService {
   async renamePlayer(
     userId: string,
     playerId: string,
-    renamePlayerDto: CreatePlayersDto,
+    renamePlayerDto: RenamePlayersDto,
   ): Promise<any> {
     const userRef = this.firestore.collection('users').doc(userId);
     const userDoc = await userRef.get();

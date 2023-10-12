@@ -7,7 +7,7 @@ import crypto from 'crypto';
 import { FieldValue } from 'firebase-admin/firestore';
 import mime from 'mime-types';
 import { bucket, gcsBucketName } from '../firebase/gcs.config';
-import { CreatePlayersDto } from 'src/users/dto/create-players.dto';
+import { CreatePlayersDto } from './dto/create-players.dto';
 import { IsimpleTournaments } from './interface/simpleTournaments.interface';
 
 @Injectable()
@@ -307,6 +307,7 @@ export class TournamentsService {
     const newPlayer = {
       name: player.name,
       id: playerId,
+      sex: player.sex,
       stats: {},
     };
     const tournamentRef = this.firestore
@@ -315,18 +316,19 @@ export class TournamentsService {
     const tournamentSnapshot = await tournamentRef.get();
     const userId = tournamentSnapshot.data().owner;
     const userRef = this.firestore.collection('users').doc(userId);
-    const userDoc = await userRef.get();
-    if (!userDoc.exists) {
-      throw new Error('User not found');
-    }
+
     const updateObject = {};
     updateObject[`players.${playerId}`] = newPlayer;
-    //promise all
-    await userRef.update(updateObject);
 
-    await tournamentRef.update({
-      players: FieldValue.arrayUnion(playerId),
-    });
+    const promiseData = [];
+    promiseData.push(userRef.update(updateObject));
+
+    promiseData.push(
+      tournamentRef.update({
+        players: FieldValue.arrayUnion(playerId),
+      }),
+    );
+    await Promise.all(promiseData);
 
     return newPlayer;
   }
@@ -378,10 +380,14 @@ export class TournamentsService {
     const userDoc = await userRef.get();
     const userData = userDoc.data();
 
-    const playersIn = tournamentData.players.map((playerId: string) => {
-      const player = userData.players[playerId];
-      return { id: playerId, name: player.name };
-    });
+    const playersIn = tournamentData.players
+      .map((playerId: string) => {
+        if (!tournamentData.playersInactive.includes(playerId)) {
+          const player = userData.players[playerId];
+          return { id: playerId, name: player.name };
+        }
+      })
+      .filter(Boolean);
 
     return playersIn;
   }
@@ -414,7 +420,11 @@ export class TournamentsService {
     const userData = userDoc.data();
 
     const playersNotInTournament = Object.keys(userData.players)
-      .filter((playerId) => !tournamentData.players.includes(playerId))
+      .filter(
+        (playerId) =>
+          !tournamentData.players.includes(playerId) ||
+          tournamentData.playersInactive.includes(playerId),
+      )
       .map((playerId) => {
         const player = userData.players[playerId];
         return { id: playerId, name: player.name };

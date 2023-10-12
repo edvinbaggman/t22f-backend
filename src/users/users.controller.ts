@@ -19,8 +19,8 @@ import { UsersService } from './users.service';
 import { CreateUsersDto } from './dto/create-users.dto';
 
 import { FirebaseAuthGuard } from '../firebase/firebase-auth.guard';
-import { CreatePlayersDto } from './dto/create-players.dto';
 import { RenameUserDto } from './dto/rename-users.dto';
+import { RenamePlayersDto } from './dto/rename-player.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -77,7 +77,7 @@ export class UsersController {
   async renamePlayer(
     @Param('userId') userId: string,
     @Param('playerId') playerId: string,
-    @Body() renamePlayerDto: CreatePlayersDto,
+    @Body() renamePlayerDto: RenamePlayersDto,
   ) {
     return this.userService.renamePlayer(userId, playerId, renamePlayerDto);
   }
