@@ -88,9 +88,15 @@ export class TournamentsController {
     return this.tournamentsService.findOne(id);
   }
 
+  @Post(':id/generateNewRound')
+  @ApiOperation({ summary: 'Generate New Round' })
+  generateNewRound(@Param('id') id: string) {
+    return this.tournamentsService.generateNewRound(id);
+  }
+
   @Put(':id')
   @ApiOperation({ summary: 'Edit tournament' })
-  generateNewRound(
+  editTournament(
     @Param('id') id: string,
     @Body() updateTournamentDto: UpdateTournamentDto,
   ) {
