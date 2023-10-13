@@ -182,11 +182,13 @@ export class UsersService {
         games: 0,
         won: 0,
         points: 0,
+        tournaments: 0,
       };
       for (const tournamentId in player.stats) {
         stats.games += player.stats[tournamentId].games;
         stats.won += player.stats[tournamentId].won;
         stats.points += player.stats[tournamentId].points;
+        stats.tournaments += 1;
       }
       leaderboard.push(stats);
     }
