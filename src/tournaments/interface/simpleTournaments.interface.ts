@@ -6,4 +6,5 @@ export interface IsimpleTournaments {
   name: string;
   image: string;
   location: string;
+  startingTime: string;
 }

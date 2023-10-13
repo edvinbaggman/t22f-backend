@@ -118,6 +118,7 @@ export class TournamentsService {
       name: '',
       image: '',
       location: '',
+      startingTime: '',
     };
     simpleTournament.id = tournamentDoc.id;
     simpleTournament.name = tournamentData.name;
@@ -125,6 +126,7 @@ export class TournamentsService {
     simpleTournament.date = tournamentData.date;
     simpleTournament.owner = tournamentData.owner;
     simpleTournament.image = tournamentData.image;
+    simpleTournament.startingTime = tournamentData.startingTime;
 
     return { ...simpleTournament };
   }
