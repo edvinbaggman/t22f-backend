@@ -60,8 +60,12 @@ export class TournamentsController {
     if (errors.length > 0) {
       throw new BadRequestException('Invalid form');
     }
+    const tournament = await this.tournamentsService.create(
+      createTournamentDto,
+      file,
+    );
 
-    return this.tournamentsService.create(createTournamentDto, file);
+    return JSON.stringify(tournament);
   }
 
   @Get()

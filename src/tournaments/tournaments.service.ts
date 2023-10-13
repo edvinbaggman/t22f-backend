@@ -26,13 +26,13 @@ export class TournamentsService {
     const newTournament = {
       ...createTournamentDto,
       id: tournamentId,
-      rounds: [],
+      rounds: {},
       players: [],
       playersInactive: [],
       image: imageUrl,
     };
-    const res = await tournamentRef.set(newTournament);
-    return JSON.stringify(res);
+    await tournamentRef.set(newTournament);
+    return newTournament;
   }
 
   async updateTournament(id: string, updateTournamentDto: UpdateTournamentDto) {
