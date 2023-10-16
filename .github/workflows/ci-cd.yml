@@ -20,8 +20,7 @@ jobs:
         export_default_credentials: true
         
     - name: Activate Service Account
-      run: |
-        cat sa_key.json  
+      run: |  
         gcloud auth activate-service-account --key-file=${{ secrets.GCP_KEY }}
 
     - name: Trigger Google Cloud Build
