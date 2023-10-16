@@ -1,0 +1,75 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+
+    - name: Setup GCloud CLI
+      uses: google-github-actions/setup-gcloud@master
+      with:
+        project_id: takes-two-to-fwango
+        export_default_credentials: true
+
+    - name: Build Docker Image
+      run: docker build --build-arg FIRESTORE_KEY=${{ secrets.FIRESTORE_KEY }} --build-arg GCP_KEY=${{ secrets.GCP_KEY }} -t gcr.io/$project_id/1:t22f .
+
+    - name: Configure Docker
+      run: gcloud auth configure-docker
+
+    - name: Push Docker Image to GCR
+      run: docker push gcr.io/takes-two-to-fwango/1:t22f
+
+    - name: Deploy to Cloud Run
+      run: |
+        gcloud run deploy YOUR_SERVICE_NAME --image gcr.io/takes-two-to-fwango/1:t22f --platform managed --region europe-west1  --allow-unauthenticated
+
+
+# name: CI/CD Pipeline
+
+# on:
+#   push:
+#     branches:
+#       - test
+#   pull_request:
+#     branches:
+#       - test
+
+# jobs:
+#   build_and_test:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout Code
+#         uses: actions/checkout@v2
+      
+#       - name: Install Dependencies
+#         run: npm install
+
+#       - name: Run Tests
+#         run: npm test
+
+#   check_commit_date:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout Code
+#         uses: actions/checkout@v2
+      
+#       - name: Check Last Commit Date
+#         run: |
+#           COMMIT_DATE=$(git log -1 --pretty=format:%cd)
+#           echo "Last commit date: $COMMIT_DATE"
+
+#   check_test_success:
+#     needs: build_and_test
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Confirm Tests Success
+#         run: echo "Tests were successful!"
