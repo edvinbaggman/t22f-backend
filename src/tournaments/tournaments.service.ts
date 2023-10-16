@@ -239,6 +239,10 @@ export class TournamentsService {
 
     const round = generateRound(tournamentData, userPlayers);
 
+    if (Object.keys(round).length < 1) {
+      return 'not enough players';
+    }
+
     const updateObject = {};
     updateObject[`rounds.${roundsPlayed}`] = round;
     const res = await tournamentRef.update(updateObject);
