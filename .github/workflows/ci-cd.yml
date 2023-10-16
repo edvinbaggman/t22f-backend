@@ -22,10 +22,11 @@ jobs:
     - name: Set Docker to use legacy builder
       run: docker builder use legacy
 
+    - name: Disable Buildx
+      run: docker buildx rm
+
     - name: Build Docker Image
-      run: |
-        docker --version
-        docker build . --build-arg FIRESTORE_KEY=${{ secrets.FIRESTORE_KEY }} --build-arg GCP_KEY=${{ secrets.GCP_KEY }} -t gcr.io/$PROJECT_ID/1:t22f
+      run: docker build . --build-arg FIRESTORE_KEY=${{ secrets.FIRESTORE_KEY }} --build-arg GCP_KEY=${{ secrets.GCP_KEY }} -t gcr.io/$PROJECT_ID/1:t22f
 
     - name: Configure Docker
       run: gcloud auth configure-docker
