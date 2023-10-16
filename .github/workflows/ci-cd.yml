@@ -12,21 +12,29 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v2
       
+    - name: Decode FIRESTORE_KEY and GCP_KEY
+      env:
+        FIRESTORE_KEY_ENCODED: ${{ secrets.FIRESTORE_KEY }}
+        GCP_KEY_ENCODED: ${{ secrets.GCP_KEY }}
+      run: |
+        echo "FIRESTORE_KEY=$(echo "$FIRESTORE_KEY_ENCODED" | base64 -d)" >> $GITHUB_ENV
+        echo "GCP_KEY=$(echo "$GCP_KEY_ENCODED" | base64 -d)" >> $GITHUB_ENV
+
     - name: Authenticate GCloud
       uses: google-github-actions/auth@v0.4.0
       with:
-        credentials_json: ${{ secrets.GCP_KEY }}
+        credentials_json: ${{ env.GCP_KEY }}
     
     - name: Setup GCloud CLI
       uses: google-github-actions/setup-gcloud@v1
       with:
         project_id: takes-two-to-fwango
-        service_account_key: ${{ secrets.GCP_KEY }}
+        service_account_key: ${{ env.GCP_KEY }}
         export_default_credentials: true
         
     - name: Trigger Google Cloud Build
       run: |
-        gcloud builds submit --config cloudbuild.yaml --substitutions=_FIRESTORE_KEY=${{ secrets.FIRESTORE_KEY }}
+        gcloud builds submit --config cloudbuild.yaml --substitutions=_FIRESTORE_KEY=${{ env.FIRESTORE_KEY }}
 
     - name: Deploy to App Engine
       run: |
@@ -35,6 +43,7 @@ jobs:
     - name: Deploy to Cloud Run
       run: |
         gcloud run deploy t22f --image gcr.io/takes-two-to-fwango/image-1:t22f --platform managed --region europe-west1 --allow-unauthenticated
+
 
 
 # name: CI/CD Pipeline

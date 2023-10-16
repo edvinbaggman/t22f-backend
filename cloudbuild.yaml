@@ -1,5 +1,5 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'gcr.io/$PROJECT_ID/image-1:t22f', '--build-arg', 'FIRESTORE_KEY=$_FIRESTORE_KEY', '.']
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/image-1:t22f', '--build-arg', 'FIRESTORE_KEY=$_FIRESTORE_KEY', '--build-arg', 'GCP_KEY=$_GCP_KEY', '.']
 images:
 - 'gcr.io/$PROJECT_ID/image-1:t22f'

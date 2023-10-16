@@ -4,10 +4,9 @@ FROM node:16
 # Définissez le répertoire de travail dans le conteneur
 WORKDIR /usr/src/app
 
-ENV FIRESTORE_KEY=$FIRESTORE_KEY
+ARG FIRESTORE_KEY
+ARG GCP_KEY
 
-# It used when we deploy the app on GCP manually and not ussing the CI/CD
-ENV GCP_KEY=$GCP_KEY 
 
 # Copiez les fichiers package.json et package-lock.json
 COPY package*.json ./
