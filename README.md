@@ -4,13 +4,12 @@
 # TakesTwoToFwango_Backend
 
 <p align="center">
-<a href="https://github.com/utilisateur/mon-repo/actions" target="_blank"><img src="https://github.com/lachiri-ilias/mon-repo/TakesTwoToFwango_Backend/Deploy%20to%20Google%20Cloud%20Run/badge.svg" alt="Deploy to Google Cloud Run Status" />
-</a>
+
+<a href="https://github.com//lachiri-ilias/TakesTwoToFwango_Backend/actions" target="_blank"><img src="https://github.com/lachiri-ilias/TakesTwoToFwango_Backend/workflows/Deploy%20to%20Google%20Cloud%20Run/badge.svg" alt="Deploy to Google Cloud Run Status" /></a>
 <a href="https://github.com/lachiri-ilias/TakesTwoToFwango_Backend/actions" target="_blank"><img src="https://github.com/lachiri-ilias/TakesTwoToFwango_Backend/workflows/CI/CD%20Pipeline/badge.svg" alt="GitHub Actions Status" /></a>
 <a href="https://github.com/lachiri-ilias/TakesTwoToFwango_Backend/commits/test" target="_blank"><img src="https://img.shields.io/github/last-commit/lachiri-ilias/TakesTwoToFwango_Backend/test" alt="Last Commit" /></a>
 </p>
 
-<!-- Ajoutez d'autres badges si nécessaire -->
 </p>
 
 ## Description

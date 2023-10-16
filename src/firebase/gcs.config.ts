@@ -2,7 +2,6 @@ import { Storage } from '@google-cloud/storage';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
-console.log('processcenv GCP KEY : ' + process.env.GCP_KEY);
 
 const storage = new Storage({
   projectId: 'takes-two-to-fwango',
