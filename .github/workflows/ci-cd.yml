@@ -36,7 +36,6 @@ jobs:
     - name: Build and Push Docker image
       run: |
         docker buildx build --push --build-arg FIRESTORE_KEY=${{ secrets.FIRESTORE_KEY }} --build-arg GCP_KEY=${{ secrets.GCP_KEY }} -t gcr.io/takes-two-to-fwango/t22f:${{ github.sha }} .
-        docker push gcr.io/takes-two-to-fwango/t22f:${{ github.sha }}
 
     - name: Deploy to Cloud Run
       run: |
