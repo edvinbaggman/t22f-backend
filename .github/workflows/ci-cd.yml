@@ -34,7 +34,8 @@ jobs:
 
     - name: Deploy to Cloud Run
       run: |
-        gcloud run deploy t22F f-image gcr.io/takes-two-to-fwango/image-1:t22f --platform managed --region europe-west1 --allow-unauthenticated
+        gcloud run deploy t22F --image gcr.io/takes-two-to-fwango/image-1:t22f --platform managed --region europe-west1 --allow-unauthenticated
+
 
 # name: CI/CD Pipeline
 
