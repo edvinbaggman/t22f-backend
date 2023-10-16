@@ -8,6 +8,9 @@ on:
 jobs:
   build_and_push:
     runs-on: ubuntu-latest
+    env:
+      PROJECT_ID: takes-two-to-fwango  # Set the PROJECT_ID environment variable
+
 
     steps:
     - name: Checkout Code
@@ -20,13 +23,11 @@ jobs:
         service_account_key: ${{ secrets.GCP_KEY }}
         export_default_credentials: true
 
-    # - name: Set Docker Default Builder to Legacy
-    #   run: docker buildx use default
 
     - name: Build Docker Image
       run: |
           docker --version
-          docker buildx build . --build-arg FIRESTORE_KEY=${{ secrets.FIRESTORE_KEY }} --build-arg GCP_KEY=${{ secrets.GCP_KEY }} -t gcr.io/${{ env.PROJECT_ID }}/image-1:t22f
+          docker build . --build-arg FIRESTORE_KEY=${{ secrets.FIRESTORE_KEY }} --build-arg GCP_KEY=${{ secrets.GCP_KEY }} -t gcr.io/${{ env.PROJECT_ID }}/image-1:t22f
   
         
     - name: Configure Docker
