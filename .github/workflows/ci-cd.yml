@@ -24,8 +24,10 @@ jobs:
 
     - name: Authenticate with Google Cloud
       run: |
-        echo "${{ secrets.GCP_KEY }}" | gcloud auth activate-service-account --key-file=-
-        gcloud config set project ${{ env.PROJECT_ID }}
+          echo "${{ secrets.GCP_KEY }}" > sa_key.json
+          gcloud auth activate-service-account --key-file=sa_key.json
+          gcloud config set project ${{ env.PROJECT_ID }}
+          rm sa_key.json
 
     - name: Trigger Google Cloud Build
       run: |
