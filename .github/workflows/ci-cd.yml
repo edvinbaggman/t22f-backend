@@ -19,13 +19,9 @@ jobs:
         service_account_key: ${{ secrets.GCP_KEY }}
         export_default_credentials: true
         
-    - name: Activate Service Account
-      run: |  
-        gcloud auth activate-service-account --key-file=${{ secrets.GCP_KEY }}
-
     - name: Trigger Google Cloud Build
       run: |
-        gcloud builds submit --config cloudbuild.yaml --substitutions=_FIRESTORE_KEY=${{ secrets.FIRESTORE_KEY }},_GCP_KEY=${{ secrets.GCP_KEY }}
+        gcloud builds submit --config cloudbuild.yaml --substitutions=_FIRESTORE_KEY=${{ secrets.FIRESTORE_KEY }}
 
 
 # GCP_KEY: "{\"type\":\"service_account\",\"project_id\":\"takes-two-to-fwango\",\"private_key_id\":\"5d23d241ec59bd1f015ab48144cfb3151411009c\",\"private_key\":\"-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC3zMLznZB3ee3Z\nnXGOSnOyroVZKAff/HjfC5f4NMtgR0yL4Jewyxxwu5Pm2KIBXYAoyGxQT15+z0np\nlqFX82xQ6uuuihJXIJj+SxG9y7Cm4NI68OzcbkB8okcBmRiNeFse3nipTanktuvi\nEZjjTmhJJQfmPdYfi0sG2+CPDhoNyM5pJ3QcwZkovSz22XnXpcJQECvb58YmnLhI\nqXJ2qpfYNYiYfv9kihkll5qGfyQ8ugxLzXe98dugJsvHkTKZgX5jjL0pJQ5tkMZH\nXQE11mYA9j9yJpWcYKp17sfNAzY+1vq7V16+UCm+f7szFRsnvNJ0cOPlPtlgWz0T\n6o88g7N/AgMBAAECggEACFzyye7zcdxEbFBzqEvO8+RpAOOHaDOutEdsxMhyMJFN\n9Fdlz4+OXbrLQge9Z15/xFtKQmU6IX8BF/XYpY3X8d6elrSFnR1ImNmFlyM7iHxW\nVIQ94tHJcWJY5MO4kEdXrhHlX56/Cj8ggIrYcA9TQ3DB6UILCihmY4uBrkCwAsx6\nYSHiP1AUpwHGHF/haeL2AIYztR6Yv1XWBesAQhHars+XWGa75ATipoU+us4VaHoy\nrLz3733Eoz6J4GWlXW+R2lHYKKKSTAAsAOQHCfa4/W3PFpugdFKp7A6oWWND2UwC\nPysh72ems8+Z++zHjMTEOVTe82SWF5zghBSMmGLHsQKBgQD2eByn8pFJtbzyfde8\nksRWX/XxG0nN0hwG6h57W542Yd3nZW1vFSk2d6LmeESqVa5N61BuvitW7NUBwL2g\nlME2EZJPHmHh3deTQhEnW3LjEMXYy7BOq6bY41ut4jeJ9sFOVAMRBo9gnJ8D+YTv\naV2Ds1aQ+aOwLFbjLHB072/lMwKBgQC+6ENWywpeSyFxDz4F6rUiJwcmuN1WbQFZ\nT1h4pRU+jPuWNicAMRfbWPmTQdbfq6wuaiJSRjJVOag6aGQo2ONepnqldX7CO2FK\nR72FNRCr9fVK+KS3PAE5Ny6fqkVMxReZ7lYY9fFd3jQBnDkqaKscyDhYvEHsO9Tz\nqZMcy9fghQKBgQDM5sZMCaknsmNG5b/5EbsQY+6/Z4RQDCEoznJQ87XwWCR3Pydf\ndiQxF/zhxZKwWVLzjHHt30OAnJvpPSdo3MJUBP+xrvyJHjkeP4qrQaedhlA1EAGf\nJa0sGrgZMzwhAndqewWhneaM1yiL0WDm+J2549pP5Hpk+Dez3ToQvQ41aQKBgQCt\nnmnve0R4sPc+7U/I7cXBw6C7VJDnUsdRQ9oADpKdinYcDC+3+u3pbKe9hrk2Pdif\ndaK1FGYeIAug4uOESoutvtX3uD2Jw5sdhNUVWkdJPKzSfALBKe8q68aZKq9PvEdU\nlO70UGgsqDK/7CYJLZvA1053VO7XOyrWVrgWDkTMSQKBgEHurPE6xQ7+niVp1Avj\nNmc0jQFiB0Li+NJ/cZopH/y1y4Pprogdw260NTz91V0mwI90nizy6GfyTgAFcHez\n78BqL4F4lA9LLlayAKUelyrN78YWAEaWoMp9kpgGIXUagN2p3pqTzzGd9rYrLnj/\nriK25d7vGwOamp22hzYlL0JT\n-----END PRIVATE KEY-----\n\",\"client_email\":\"takes-two-to-fwango@appspot.gserviceaccount.com\",\"client_id\":\"105757856409055578426\",\"auth_uri\":\"https://accounts.google.com/o/oauth2/auth\",\"token_uri\":\"https://oauth2.googleapis.com/token\",\"auth_provider_x509_cert_url\":\"https://www.googleapis.com/oauth2/v1/certs\",\"client_x509_cert_url\":\"https://www.googleapis.com/robot/v1/metadata/x509/takes-two-to-fwango%40appspot.gserviceaccount.com\",\"universe_domain\":\"googleapis.com\"}"
