@@ -5,9 +5,6 @@ on:
     branches:
       - main
 
-env:
-  PROJECT_ID: takes-two-to-fwango
-
 jobs:
   build_and_push:
     runs-on: ubuntu-latest
@@ -19,24 +16,26 @@ jobs:
     - name: Setup GCloud CLI
       uses: google-github-actions/setup-gcloud@main
       with:
-        project_id: ${{ env.PROJECT_ID }}
+        project_id: takes-two-to-fwango
         export_default_credentials: true
+
+    - name: Set Docker to use legacy builder
+      run: docker builder use legacy
 
     - name: Build Docker Image
       run: |
         docker --version
-        docker build . --build-arg FIRESTORE_KEY=${{ secrets.FIRESTORE_KEY }} --build-arg GCP_KEY=${{ secrets.GCP_KEY }} -t gcr.io/${{ env.PROJECT_ID }}/1:t22f
+        docker build . --build-arg FIRESTORE_KEY=${{ secrets.FIRESTORE_KEY }} --build-arg GCP_KEY=${{ secrets.GCP_KEY }} -t gcr.io/$PROJECT_ID/1:t22f
 
     - name: Configure Docker
       run: gcloud auth configure-docker
 
     - name: Push Docker Image to GCR
-      run: docker push gcr.io/${{ env.PROJECT_ID }}/1:t22f
+      run: docker push gcr.io/takes-two-to-fwango/1:t22f
 
     - name: Deploy to Cloud Run
       run: |
-        gcloud run deploy YOUR_SERVICE_NAME --image gcr.io/${{ env.PROJECT_ID }}/1:t22f --platform managed --region europe-west1  --allow-unauthenticated
-
+        gcloud run deploy YOUR_SERVICE_NAME --image gcr.io/takes-two-to-fwango/1:t22f --platform managed --region europe-west1  --allow-unauthenticated
 
 # name: CI/CD Pipeline
 
