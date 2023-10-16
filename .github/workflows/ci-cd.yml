@@ -20,7 +20,9 @@ jobs:
         export_default_credentials: true
 
     - name: Build Docker Image
-      run: docker build --build-arg FIRESTORE_KEY=${{ secrets.FIRESTORE_KEY }} --build-arg GCP_KEY=${{ secrets.GCP_KEY }} -t gcr.io/$project_id/1:t22f .
+      run: |
+        docker --version
+        docker build --build-arg FIRESTORE_KEY=${{ secrets.FIRESTORE_KEY }} --build-arg GCP_KEY=${{ secrets.GCP_KEY }} -t gcr.io/$project_id/1:t22f .
 
     - name: Configure Docker
       run: gcloud auth configure-docker
