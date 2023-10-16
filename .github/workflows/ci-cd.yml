@@ -14,8 +14,8 @@ jobs:
       
     - name: Decode FIRESTORE_KEY and GCP_KEY
       env:
-        FIRESTORE_KEY_ENCODED: ${{ secrets.FIRESTORE_KEY_Decode }}
-        GCP_KEY_ENCODED: ${{ secrets.GCP_KEY_Decode }}
+        FIRESTORE_KEY_ENCODED: ${{ secrets.FIRESTORE_KEY_DECODE }}
+        GCP_KEY_ENCODED: ${{ secrets.GCP_KEY_DECODE }}
       run: |
         echo "FIRESTORE_KEY=$(echo "$FIRESTORE_KEY_ENCODED" | base64 -d)" >> $GITHUB_ENV
         echo "GCP_KEY=$(echo "$GCP_KEY_ENCODED" | base64 -d)" >> $GITHUB_ENV
@@ -23,18 +23,18 @@ jobs:
     - name: Authenticate GCloud
       uses: google-github-actions/auth@v0.4.0
       with:
-        credentials_json: ${{ env.GCP_KEY_Decode }}
+        credentials_json: ${{ env.GCP_KEY_DECODE}}
     
     - name: Setup GCloud CLI
       uses: google-github-actions/setup-gcloud@v1
       with:
         project_id: takes-two-to-fwango
-        service_account_key: ${{ env.GCP_KEY_Decode }}
+        service_account_key: ${{ env.GCP_KEY_DECODE }}
         export_default_credentials: true
         
     - name: Trigger Google Cloud Build
       run: |
-        gcloud builds submit --config cloudbuild.yaml --substitutions=_FIRESTORE_KEY=${{ env.FIRESTORE_KEY_Decode }}
+        gcloud builds submit --config cloudbuild.yaml --substitutions=_FIRESTORE_KEY=${{ env.FIRESTORE_KEY_DECODE }}
 
     - name: Deploy to App Engine
       run: |
