@@ -248,70 +248,6 @@ export class TournamentsService {
     return JSON.stringify(res);
   }
 
-  async addStatsPlayer(
-    userId: string,
-    playerId: string,
-    tournamentId: string,
-    points: number,
-  ) {
-    const userRef = this.firestore.collection('users').doc(userId);
-    const userDoc = await userRef.get();
-    if (!userDoc.exists) {
-      throw new Error('User not found');
-    }
-    const userData = userDoc.data();
-
-    if (!userData.players || !userData.players[playerId]) {
-      throw new Error('Player not found');
-    }
-    const fieldPath = `players.${playerId}.stats.${tournamentId}`;
-
-    if (
-      !userData.players[playerId].stats ||
-      !userData.players[playerId].stats[tournamentId]
-    ) {
-      userData.players[playerId].stats[tournamentId] = {
-        games: 0,
-        won: 0,
-        points: 0,
-      };
-    }
-    let currentGames =
-      userData.players[playerId].stats[tournamentId].games || 0;
-    let currentWon = userData.players[playerId].stats[tournamentId].won || 0;
-    let currentPoints =
-      userData.players[playerId].stats[tournamentId].points || 0;
-    console.log('current gammes = ' + currentGames);
-    // console.log( )
-    currentGames += 1;
-    console.log('current gammes + = ' + currentGames);
-
-    currentPoints += points;
-    if (points > 0) {
-      currentWon += 1;
-    }
-    console.log(currentGames, currentWon, currentPoints);
-    await userRef.update({
-      [fieldPath]: {
-        games: currentGames,
-        won: currentWon,
-        points: currentPoints,
-      },
-    });
-    return { currentGames, currentWon, currentPoints };
-  }
-
-  async processPlayers(
-    team: { players: string[] },
-    owner: string,
-    tournamentId: string,
-    pointsDiff: number,
-  ) {
-    for (const playerId of team.players) {
-      await this.addStatsPlayer(owner, playerId, tournamentId, pointsDiff);
-    }
-  }
-
   /**
    * Add new score to a match
    *
@@ -337,26 +273,6 @@ export class TournamentsService {
     ] = matchResultDto.team2Points;
 
     await tournamentRef.update(updateObject);
-    // console.log(matchResultDto);
-    // const tournementDoc = await tournamentRef.get();
-    // const tournementData = tournementDoc.data();
-
-    // const pointsDiff = matchResultDto.team1Points - matchResultDto.team2Points;
-    // const match = tournementData.rounds[matchResultDto.round];
-    // // console.log(match);
-
-    // this.processPlayers(
-    //   match[matchResultDto.match].team1,
-    //   tournementData.owner,
-    //   tournamentId,
-    //   pointsDiff * 1,
-    // );
-    // this.processPlayers(
-    //   match[matchResultDto.match].team2,
-    //   tournementData.owner,
-    //   tournamentId,
-    //   pointsDiff * -1,
-    // );
   }
 
   async createPlayer(
@@ -528,6 +444,13 @@ export class TournamentsService {
     return JSON.stringify(res);
   }
 
+  /**
+   * Update players stats at the end of a tournament
+   *
+   * @param {string} tournamentId - Id of the tournament.
+   * @returns {string} - Json string of the result.
+   *
+   */
   async endOfTournament(tournamentId: string): Promise<string> {
     const tournamentRef = this.firestore
       .collection('tournaments')
@@ -535,26 +458,36 @@ export class TournamentsService {
     const tournamentSnapshot = await tournamentRef.get();
     const tournamentData = tournamentSnapshot.data();
 
+    // Create an object to store temporary stats updates for each player
+    const playerUpdates: { [userId: string]: any } = {};
+
     console.log(tournamentData.rounds);
     for (const key in tournamentData.rounds) {
       for (const matchId in tournamentData.rounds[key]) {
         const match = tournamentData.rounds[key][matchId];
         const pointsDiff = match.team1.points - match.team2.points;
-        this.processPlayers(
+        processPlayersTemp(
           match.team1,
           tournamentData.owner,
           tournamentId,
           pointsDiff * 1,
+          playerUpdates,
         );
-
-        await this.processPlayers(
+        processPlayersTemp(
           match.team2,
           tournamentData.owner,
           tournamentId,
           pointsDiff * -1,
+          playerUpdates,
         );
       }
     }
+
+    for (const userId in playerUpdates) {
+      const userUpdate = playerUpdates[userId];
+      await this.firestore.collection('users').doc(userId).update(userUpdate);
+    }
+
     return JSON.stringify('Players stats update');
   }
 }
@@ -884,3 +817,47 @@ const createLeaderboard = (tournamentData) => {
   leaderboardArray.sort(sortLeaderboard);
   return leaderboardArray;
 };
+
+/**
+ * Process players stats updates
+ *
+ * @param {Object} team - Team object.
+ * @param {string} owner - Owner of the tournament.
+ * @param {string} tournamentId - Id of the tournament.
+ * @param {number} pointsDiff - Difference of points between the two teams.
+ * @param {Object} playerUpdates - Object to store temporary stats updates for each player.
+ *
+ * */
+function processPlayersTemp(
+  team: { players: string[] },
+  owner: string,
+  tournamentId: string,
+  pointsDiff: number,
+  playerUpdates: { [userId: string]: any },
+) {
+  for (const playerId of team.players) {
+    const fieldPath = `players.${playerId}.stats.${tournamentId}`;
+
+    if (!playerUpdates[owner]) {
+      playerUpdates[owner] = {};
+    }
+
+    if (
+      !playerUpdates[owner][fieldPath] ||
+      !playerUpdates[owner][fieldPath].games
+    ) {
+      playerUpdates[owner][fieldPath] = {
+        games: 0,
+        won: 0,
+        points: 0,
+      };
+    }
+
+    playerUpdates[owner][fieldPath].games += 1;
+    playerUpdates[owner][fieldPath].points += pointsDiff;
+
+    if (pointsDiff > 0) {
+      playerUpdates[owner][fieldPath].won += 1;
+    }
+  }
+}
