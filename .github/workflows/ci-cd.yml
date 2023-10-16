@@ -22,7 +22,6 @@ jobs:
 
     - name: Build and Push Docker image
       run: |
-        gcloud components install docker
         docker build -t gcr.io/takes-two-to-fwango/t22f .
         docker push gcr.io/takes-two-to-fwango/t22f
 
