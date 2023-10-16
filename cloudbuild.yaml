@@ -1,7 +1,6 @@
 steps:
   # Build the Docker image
   - name: 'gcr.io/cloud-builders/docker'
-    # args: ['build', '-t', 'gcr.io/takes-two-to-fwango/t22f', '.']
     args: ['build', '-t', 'gcr.io/takes-two-to-fwango/t22f', '--build-arg', 'FIRESTORE_KEY=$_FIRESTORE_KEY', '--build-arg', 'GCP_KEY=$_GCP_KEY', '.']
 
   # Push the Docker image to Google Container Registry
