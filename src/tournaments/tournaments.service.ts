@@ -281,7 +281,11 @@ export class TournamentsService {
     let currentWon = userData.players[playerId].stats[tournamentId].won || 0;
     let currentPoints =
       userData.players[playerId].stats[tournamentId].points || 0;
+    console.log('current gammes = ' + currentGames);
+    // console.log( )
     currentGames += 1;
+    console.log('current gammes + = ' + currentGames);
+
     currentPoints += points;
     if (points > 0) {
       currentWon += 1;
@@ -304,7 +308,7 @@ export class TournamentsService {
     pointsDiff: number,
   ) {
     for (const playerId of team.players) {
-      this.addStatsPlayer(owner, playerId, tournamentId, pointsDiff);
+      await this.addStatsPlayer(owner, playerId, tournamentId, pointsDiff);
     }
   }
 
@@ -535,8 +539,7 @@ export class TournamentsService {
     for (const key in tournamentData.rounds) {
       for (const matchId in tournamentData.rounds[key]) {
         const match = tournamentData.rounds[key][matchId];
-        const pointsDiff = match.team1Points - match.team2Points;
-
+        const pointsDiff = match.team1.points - match.team2.points;
         this.processPlayers(
           match.team1,
           tournamentData.owner,
@@ -544,7 +547,7 @@ export class TournamentsService {
           pointsDiff * 1,
         );
 
-        this.processPlayers(
+        await this.processPlayers(
           match.team2,
           tournamentData.owner,
           tournamentId,
