@@ -1,4 +1,4 @@
-name: Deploy Docker image to Cloud Run
+name: Deploy to Google Cloud Run
 
 on:
   push:
@@ -29,13 +29,14 @@ jobs:
       run: |
         echo '${{ secrets.GCP_KEY }}' | docker login -u _json_key --password-stdin https://gcr.io
 
-    - name: Enable docker buildx
-      run: |
-        docker buildx create --use
-
     - name: Build and Push Docker image
+      env:
+        FIRESTORE_KEY: ${{ secrets.FIRESTORE_KEY }}
+        GCP_KEY: ${{ secrets.GCP_KEY }}
       run: |
-        docker buildx build --push --build-arg FIRESTORE_KEY=${{ secrets.FIRESTORE_KEY }} --build-arg GCP_KEY=${{ secrets.GCP_KEY }} -t gcr.io/takes-two-to-fwango/t22f:${{ github.sha }} .
+        docker build -t gcr.io/takes-two-to-fwango/t22f:${{ github.sha }} .
+        docker push gcr.io/takes-two-to-fwango/t22f:${{ github.sha }}
+
 
     - name: Deploy to Cloud Run
       run: |
