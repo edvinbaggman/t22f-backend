@@ -28,6 +28,13 @@ jobs:
       run: |
         gcloud builds submit --config cloudbuild.yaml --substitutions=_FIRESTORE_KEY=${{ secrets.FIRESTORE_KEY }}
 
+    - name: Deploy to App Engine
+      run: |
+        gcloud app deploy
+
+    - name: Deploy to Cloud Run
+      run: |
+        gcloud run deploy t22F f-image gcr.io/takes-two-to-fwango/image-1:t22f --platform managed --region europe-west1 --allow-unauthenticated
 
 # name: CI/CD Pipeline
 
