@@ -1,13 +1,47 @@
-name: Deploy to Google Cloud Run
+name: Google Cloud Build
 
 on:
   push:
     branches:
-      - main  # ou la branche de votre choix
+      - main
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        service_account_key: ${{ secrets.GCP_KEY }}
+        project_id: takes-two-to-fwango
+        export_default_credentials: true
+
+    - name: Trigger Google Cloud Build
+      id: trigger-build
+      run: |
+        BUILD_ID=$(gcloud builds submit --config=cloudbuild.yaml --async --format 'value(id)')
+        echo "BUILD_ID=$BUILD_ID" >> $GITHUB_ENV
+
+    - name: Check build status
+      run: |
+        while true; do
+          STATUS=$(gcloud builds describe $BUILD_ID --format 'value(status)')
+          if [[ "$STATUS" == "SUCCESS" ]]; then
+            echo "Build succeeded!"
+            break
+          elif [[ "$STATUS" == "FAILURE" || "$STATUS" == "CANCELLED" || "$STATUS" == "TIMEOUT" ]]; then
+            echo "Build failed!"
+            exit 1
+          else
+            echo "Build is still in progress..."
+            sleep 20
+          fi
+        done
+
 
 #     steps:
 #     - name: Checkout code
