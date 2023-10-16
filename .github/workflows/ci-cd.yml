@@ -9,8 +9,7 @@ jobs:
   build_and_push:
     runs-on: ubuntu-latest
     env:
-      PROJECT_ID: takes-two-to-fwango  # Set the PROJECT_ID environment variable
-
+      PROJECT_ID: takes-two-to-fwango
 
     steps:
     - name: Checkout Code
@@ -19,28 +18,14 @@ jobs:
     - name: Setup GCloud CLI
       uses: google-github-actions/setup-gcloud@main
       with:
-        project_id: takes-two-to-fwango
+        project_id: ${{ env.PROJECT_ID }}
         service_account_key: ${{ secrets.GCP_KEY }}
         export_default_credentials: true
 
-
-    - name: Build Docker Image
+    - name: Trigger Google Cloud Build
       run: |
-          docker --version
-          docker build . --build-arg FIRESTORE_KEY=${{ secrets.FIRESTORE_KEY }} --build-arg GCP_KEY=${{ secrets.GCP_KEY }} -t gcr.io/${{ env.PROJECT_ID }}/image-1:t22f
-  
-        
-    - name: Configure Docker
-      run: gcloud auth configure-docker
+        gcloud builds submit --config cloudbuild.yaml --substitutions=_FIRESTORE_KEY=${{ secrets.FIRESTORE_KEY }},_GCP_KEY=${{ secrets.GCP_KEY }}
 
-    - name: Push Docker Image to GCR
-      run: docker push gcr.io/${{ env.PROJECT_ID }}/1:t22f
-
-    - name: Deploy to Cloud Run
-      run: |
-        gcloud run deploy t22f --image gcr.io/${{ env.PROJECT_ID }}/1:t22f --platform managed --region europe-west1  --allow-unauthenticated
-
-  
 
 
 # name: CI/CD Pipeline
