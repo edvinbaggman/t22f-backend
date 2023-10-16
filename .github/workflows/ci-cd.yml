@@ -16,7 +16,7 @@ jobs:
     - name: Authenticate GCloud
       uses: google-github-actions/auth@v0.4.0
       with:
-        credentials_json: ${{ env.GCP_KEY}}
+        credentials_json: ${{ secrets.GCP_KEY}}
 
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@main
