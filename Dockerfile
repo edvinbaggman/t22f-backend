@@ -5,7 +5,7 @@ FROM node:16
 WORKDIR /usr/src/app
 
 ARG FIRESTORE_KEY
-ARG GCP_KEY
+ENV GCP_KEY=$GCP_KEY
 
 
 # Copiez les fichiers package.json et package-lock.json
