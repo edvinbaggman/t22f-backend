@@ -94,8 +94,8 @@ export class TournamentsController {
 
   @Post(':id/generateNewRound')
   @ApiOperation({ summary: 'Generate New Round' })
-  generateNewRound(@Param('id') id: string) {
-    return this.tournamentsService.generateNewRound(id);
+  async generateNewRound(@Param('id') id: string) {
+    return await this.tournamentsService.generateNewRound(id);
   }
 
   @Put(':id')
