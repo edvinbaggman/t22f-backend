@@ -17,20 +17,33 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v2
-
-    - name: Setup GCloud CLI
-      uses: google-github-actions/setup-gcloud@main
+    
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@master
       with:
-        project_id: ${{ env.PROJECT_ID }}
-        service_account_key: ${{ env.GCP_KEY }}
-        export_default_credentials: true
-
-    - name: Authenticate with Google Cloud
+        version: '290.0.1'
+        
+    - name: Create Service Account file from .env
       run: |
-          echo "${{ env.GCP_KEY }}" > sa_key.json
-          gcloud auth activate-service-account --key-file=sa_key.json
-          gcloud config set project ${{ env.PROJECT_ID }}
-          rm sa_key.json
+        echo "${{ env.GCP_KEY }}" > sa_key.json
+
+    - name: Activate Service Account
+      run: |
+        gcloud auth activate-service-account --key-file=sa_key.json
+
+    # - name: Setup GCloud CLI
+    #   uses: google-github-actions/setup-gcloud@main
+    #   with:
+    #     project_id: ${{ env.PROJECT_ID }}
+    #     service_account_key: ${{ env.GCP_KEY }}
+    #     export_default_credentials: true
+
+    # - name: Authenticate with Google Cloud
+    #   run: |
+    #       echo "${{ env.GCP_KEY }}" > sa_key.json
+    #       gcloud auth activate-service-account --key-file=sa_key.json
+    #       gcloud config set project ${{ env.PROJECT_ID }}
+    #       rm sa_key.json
 
     - name: Trigger Google Cloud Build
       run: |
