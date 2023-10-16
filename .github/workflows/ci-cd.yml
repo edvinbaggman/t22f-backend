@@ -17,10 +17,8 @@ jobs:
       uses: google-github-actions/setup-gcloud@main
       with:
         project_id: takes-two-to-fwango
+        service_account_key: ${{ secrets.GCP_KEY }}
         export_default_credentials: true
-
-    - name: Set Docker to use legacy builder
-      run: docker builder use legacy
 
     - name: Disable Buildx
       run: docker buildx rm
