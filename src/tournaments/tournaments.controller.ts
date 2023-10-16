@@ -186,4 +186,9 @@ export class TournamentsController {
   remove(@Param('id') id: string) {
     return this.tournamentsService.remove(id);
   }
+
+  @Patch(':tournamentId/endOfTournament')
+  endOfTournament(@Param('tournamentId') tournamentId: string) {
+    return this.tournamentsService.endOfTournament(tournamentId);
+  }
 }

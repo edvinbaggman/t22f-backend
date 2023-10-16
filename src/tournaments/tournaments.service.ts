@@ -236,12 +236,11 @@ export class TournamentsService {
     const userPlayers = userData.players;
 
     const roundsPlayed = Object.keys(tournamentData.rounds).length;
-
     const round = generateRound(tournamentData, userPlayers);
 
     const updateObject = {};
     updateObject[`rounds.${roundsPlayed}`] = round;
-    const res = await tournamentRef.update(updateObject);
+    const res = tournamentRef.update(updateObject);
     return JSON.stringify(res);
   }
 
@@ -330,26 +329,26 @@ export class TournamentsService {
     ] = matchResultDto.team2Points;
 
     await tournamentRef.update(updateObject);
-    console.log(matchResultDto);
-    const tournementDoc = await tournamentRef.get();
-    const tournementData = tournementDoc.data();
+    // console.log(matchResultDto);
+    // const tournementDoc = await tournamentRef.get();
+    // const tournementData = tournementDoc.data();
 
-    const pointsDiff = matchResultDto.team1Points - matchResultDto.team2Points;
-    const match = tournementData.rounds[matchResultDto.round];
-    console.log(match);
+    // const pointsDiff = matchResultDto.team1Points - matchResultDto.team2Points;
+    // const match = tournementData.rounds[matchResultDto.round];
+    // // console.log(match);
 
-    this.processPlayers(
-      match[matchResultDto.match].team1,
-      tournementData.owner,
-      tournamentId,
-      pointsDiff * 1,
-    );
-    this.processPlayers(
-      match[matchResultDto.match].team2,
-      tournementData.owner,
-      tournamentId,
-      pointsDiff * -1,
-    );
+    // this.processPlayers(
+    //   match[matchResultDto.match].team1,
+    //   tournementData.owner,
+    //   tournamentId,
+    //   pointsDiff * 1,
+    // );
+    // this.processPlayers(
+    //   match[matchResultDto.match].team2,
+    //   tournementData.owner,
+    //   tournamentId,
+    //   pointsDiff * -1,
+    // );
   }
 
   async createPlayer(
@@ -519,6 +518,37 @@ export class TournamentsService {
     const res = await tournamentRef.delete();
 
     return JSON.stringify(res);
+  }
+
+  async endOfTournament(tournamentId: string): Promise<string> {
+    const tournamentRef = this.firestore
+      .collection('tournaments')
+      .doc(tournamentId);
+    const tournamentSnapshot = await tournamentRef.get();
+    const tournamentData = tournamentSnapshot.data();
+
+    console.log(tournamentData.rounds);
+    for (const key in tournamentData.rounds) {
+      for (const matchId in tournamentData.rounds[key]) {
+        const match = tournamentData.rounds[key][matchId];
+        const pointsDiff = match.team1Points - match.team2Points;
+
+        this.processPlayers(
+          match.team1,
+          tournamentData.owner,
+          tournamentId,
+          pointsDiff * 1,
+        );
+
+        this.processPlayers(
+          match.team2,
+          tournamentData.owner,
+          tournamentId,
+          pointsDiff * -1,
+        );
+      }
+    }
+    return JSON.stringify('Players stats update');
   }
 }
 
