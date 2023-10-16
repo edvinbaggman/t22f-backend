@@ -13,6 +13,11 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
+      - name: Authentification avec Google Cloud
+        run: echo '${{ secrets.GCP_KEY }}' | gcloud auth activate-service-account --key-file=-
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_KEY }}
+
       - name: Build and Tag Docker Image
         run: |
           docker build -t t22f .
