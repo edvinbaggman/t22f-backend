@@ -1,8 +1,8 @@
 steps:
   # Build the Docker image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/takes-two-to-fwango/t22f', '.']
-    # args: ['build', '-t', 'gcr.io/takes-two-to-fwango/t22f', '--build-arg', 'FIRESTORE_KEY=$_FIRESTORE_KEY', '--build-arg', 'GCP_KEY=$_GCP_KEY', '.']
+    # args: ['build', '-t', 'gcr.io/takes-two-to-fwango/t22f', '.']
+    args: ['build', '-t', 'gcr.io/takes-two-to-fwango/t22f', '--build-arg', 'FIRESTORE_KEY=$_FIRESTORE_KEY', '--build-arg', 'GCP_KEY=$_GCP_KEY', '.']
 
   # Push the Docker image to Google Container Registry
   - name: 'gcr.io/cloud-builders/docker'
@@ -13,7 +13,7 @@ steps:
     args: ['run', 'deploy', 'YOUR_SERVICE_NAME', '--image', 'gcr.io/takes-two-to-fwango/t22f', '--platform', 'managed', '--allow-unauthenticated', '--project', 'takes-two-to-fwango', '--region', 'europe-west1']
 
 # Secret Manager configuration
-# secrets:
-#   - secretEnv:
-#       _FIRESTORE_KEY: firestore-secret
-#       _GCP_KEY: gcp-secret
+secrets:
+  - secretEnv:
+      _FIRESTORE_KEY: firestore-secret
+      _GCP_KEY: gcp-secret
