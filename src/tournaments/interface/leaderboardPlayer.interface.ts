@@ -1,4 +1,4 @@
-export interface leaderboardPlayer {
+export interface ILeaderboardPlayer {
   id: string;
   name: string;
   games: number;

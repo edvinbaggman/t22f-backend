@@ -30,8 +30,6 @@ import { ILeaderboardUser } from './interface/leaderboard.interface';
 export class UsersController {
   constructor(private readonly userService: UsersService) {}
 
-  // TOCHECK : We need to be authentificated to get all the users ?
-
   /**
    * @description Get all the users
    * @returns {Promise<User[]>} All the users
@@ -40,6 +38,8 @@ export class UsersController {
    */
   @Get()
   @ApiOperation({ summary: 'Get all the users' })
+  @ApiBearerAuth()
+  @UseGuards(FirebaseAuthGuard)
   @ApiResponse({ status: 200, description: 'Users retrieved successfully.' })
   @ApiResponse({ status: 403, description: 'Unauthorized.' })
   findAll(): Promise<Users[]> {

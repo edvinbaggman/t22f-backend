@@ -9,16 +9,26 @@ import mime from 'mime-types';
 import { bucket, gcsBucketName } from '../firebase/gcs.config';
 import { CreatePlayersDto } from './dto/create-players.dto';
 import { IsimpleTournaments } from './interface/simpleTournaments.interface';
-import { leaderboardPlayer } from './interface/leaderboardPlayer.interface';
+import { ILeaderboardPlayer } from './interface/leaderboardPlayer.interface';
+import { Tournament } from './entities/tournament.model';
+import { Players } from './entities/players.model';
 
 @Injectable()
 export class TournamentsService {
   private readonly firestore = admin.firestore();
 
+  /**
+   * Create a new tournament
+   *
+   * @param {CreateTournamentDto} createTournamentDto - Object of the tournament information.
+   * @param {Express.Multer.File} file - Image file of the tournament.
+   * @returns {Tournament} - Object of the tournament information.
+   *
+   */
   async create(
     createTournamentDto: CreateTournamentDto,
     file: Express.Multer.File,
-  ) {
+  ): Promise<Tournament> {
     const imageUrl = await uploadImage(file);
     const tournamentId = crypto.randomUUID();
     const tournamentRef = this.firestore
@@ -36,7 +46,18 @@ export class TournamentsService {
     return newTournament;
   }
 
-  async updateTournament(id: string, updateTournamentDto: UpdateTournamentDto) {
+  /**
+   * Update a tournament
+   *
+   * @param {string} id - Id of the tournament.
+   * @param {UpdateTournamentDto} updateTournamentDto - Object of the tournament information.
+   * @returns {string} - Json string of the result.
+   *
+   */
+  async updateTournament(
+    id: string,
+    updateTournamentDto: UpdateTournamentDto,
+  ): Promise<string> {
     const tournamentRef = this.firestore.collection('tournaments').doc(id);
     const res = await tournamentRef.update({ ...updateTournamentDto });
     return JSON.stringify(res);
@@ -254,7 +275,7 @@ export class TournamentsService {
    *
    * @param {string} tournamentId - Id of the tournament.
    * @param {matchResultDto} matchResultDto - Object of the match result.
-   * @returns {string} - Json string of update tournament with new score.
+   * @returns {void} - Void.
    *
    */
   async addScore(
@@ -276,11 +297,18 @@ export class TournamentsService {
     await tournamentRef.update(updateObject);
   }
 
+  /**
+   * Create a new player
+   *
+   * @param {string} tournamentId - Id of the tournament.
+   * @param {CreatePlayersDto} player - Object of the player information.
+   * @returns {Players} - Object of the player information.
+   *
+   */
   async createPlayer(
     tournamentId: string,
     player: CreatePlayersDto,
-  ): Promise<any> {
-    // TODO: change any to Players
+  ): Promise<Players> {
     const playerId = crypto.randomUUID();
     const newPlayer = {
       name: player.name,
@@ -446,7 +474,7 @@ export class TournamentsService {
   }
 
   /**
-   * Update players stats at the end of a tournament
+   * Update all players stats at the end of a tournament
    *
    * @param {string} tournamentId - Id of the tournament.
    * @returns {string} - Json string of the result.
@@ -462,7 +490,6 @@ export class TournamentsService {
     // Create an object to store temporary stats updates for each player
     const playerUpdates: { [userId: string]: any } = {};
 
-    console.log(tournamentData.rounds);
     for (const key in tournamentData.rounds) {
       for (const matchId in tournamentData.rounds[key]) {
         const match = tournamentData.rounds[key][matchId];
@@ -493,35 +520,22 @@ export class TournamentsService {
   }
 }
 
-//Creates matches at random. Not to be used.
-// const generateMatches = (tournamentData) => {
-//   const round = {};
-//   const players = tournamentData.players;
-//   while (players.length >= 4) {
-//     const matchId = crypto.randomUUID();
-//     const matchPlayers = [];
-//     for (let index = 0; index < 4; index++) {
-//       const randomIndex = Math.floor(Math.random() * players.length);
-//       matchPlayers.push(players.splice(randomIndex, 1)[0]);
-//     }
-//     const match = {
-//       team1: { players: matchPlayers.slice(0, 2), points: '' },
-//       team2: { players: matchPlayers.slice(2), points: '' },
-//     };
-//     round[matchId] = match;
-//   }
-//   return round;
-// };
-
-//A randomized algorithm to generate a round that is as good as possible
-//TODO take gender into account
-
-const generateRound = (tournamentData, userPlayers) => {
+/**
+ * Generate a new round for a tournament
+ *
+ * @param {admin.firestore.DocumentData} tournamentData - Firebase document data of the tournament.
+ * @param {Players} userPlayers - Firebase document data of the user.
+ *
+ */
+const generateRound = (
+  tournamentData: admin.firestore.DocumentData,
+  userPlayers: Players,
+) => {
   const playersInactiveArray = tournamentData.playersInactive;
   const playersInactiveLength = playersInactiveArray.length;
-
   const playersArray = tournamentData.players;
   const playersLength = playersArray.length;
+  const {} = userPlayers;
 
   //Create matrix with zeros
   const playedMatrix = [];
@@ -693,7 +707,14 @@ const generateRound = (tournamentData, userPlayers) => {
   return bestRound;
 };
 
-const shuffle = (array: string[]) => {
+/**
+ * Shuffle players in an array
+ *
+ * @param {string[]} array - Array of strings.
+ * @returns {string[]} - Array of strings.
+ *
+ */
+const shuffle = (array: number[]): number[] => {
   const copyOfArray = [...array];
   for (let i = copyOfArray.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -702,10 +723,10 @@ const shuffle = (array: string[]) => {
   return copyOfArray;
 };
 
-function getOrderOfSums(matrix) {
+function getOrderOfSums(matrix: any[]) {
   const sumsWithIndex = matrix.map((row, index) => ({
     index,
-    sum: row.reduce((acc, curr) => acc + curr, 0),
+    sum: row.reduce((acc: any, curr: any) => acc + curr, 0),
   }));
 
   sumsWithIndex.sort((a, b) => a.sum - b.sum);
@@ -713,7 +734,15 @@ function getOrderOfSums(matrix) {
   return sumsWithIndex.map((item) => item.index);
 }
 
-async function uploadImage(file: Express.Multer.File) {
+/**
+ * Upload image to Google Cloud Storage
+ *
+ * @param {Express.Multer.File} file - Image file of the tournament.
+ * @returns {string} - Url of the image.
+ * @throws {Error} - Error.
+ *
+ */
+async function uploadImage(file: Express.Multer.File): Promise<string> {
   let publicUrl = '';
   if (file && file.buffer instanceof Buffer) {
     try {
@@ -745,19 +774,39 @@ async function uploadImage(file: Express.Multer.File) {
   return publicUrl;
 }
 
-function sortLeaderboard(playerA, playerB) {
+/**
+ * Sort Two player of a leaderborad
+ *
+ * @param {ILeaderboardPlayer} playerA - Player A.
+ * @param {ILeaderboardPlayer} playerB - Player B.
+ * @returns {number} - Diffrence between the two players stats
+ *
+ */
+function sortLeaderboard(
+  playerA: ILeaderboardPlayer,
+  playerB: ILeaderboardPlayer,
+): number {
   if (playerA.won !== playerB.won) {
     return playerB.won - playerA.won;
   }
 
-  if (playerA.pointDiff !== playerB.pointDiff) {
-    return playerB.pointDiff - playerA.pointDiff;
+  if (playerA.points !== playerB.points) {
+    return playerB.points - playerA.points;
   }
 
-  return playerA.matches - playerB.matches;
+  return playerA.games - playerB.games;
 }
 
-const createLeaderboard = (tournamentData) => {
+/**
+ * Create a leaderboard for a tournament
+ *
+ * @param {admin.firestore.DocumentData} tournamentData - Firebase document data of the tournament.
+ * @returns {ILeaderboardPlayer[]} - Array of players in the leaderboard.
+ *
+ */
+const createLeaderboard = (
+  tournamentData: admin.firestore.DocumentData,
+): ILeaderboardPlayer[] => {
   const leaderboard = {};
 
   for (const player of tournamentData.players) {
@@ -814,7 +863,7 @@ const createLeaderboard = (tournamentData) => {
       leaderboard[team2player2].points += pointDiffTeam2;
     }
   }
-  const leaderboardArray: leaderboardPlayer[] = Object.values(leaderboard);
+  const leaderboardArray: ILeaderboardPlayer[] = Object.values(leaderboard);
   leaderboardArray.sort(sortLeaderboard);
   const leaderboardArrayWithoutInactive = leaderboardArray.filter(
     (player) => player.games > 0,
@@ -831,6 +880,7 @@ const createLeaderboard = (tournamentData) => {
  * @param {string} tournamentId - Id of the tournament.
  * @param {number} pointsDiff - Difference of points between the two teams.
  * @param {Object} playerUpdates - Object to store temporary stats updates for each player.
+ * @returns {void} - Void.
  *
  * */
 function processPlayersTemp(
@@ -839,7 +889,7 @@ function processPlayersTemp(
   tournamentId: string,
   pointsDiff: number,
   playerUpdates: { [userId: string]: any },
-) {
+): void {
   for (const playerId of team.players) {
     const fieldPath = `players.${playerId}.stats.${tournamentId}`;
 
