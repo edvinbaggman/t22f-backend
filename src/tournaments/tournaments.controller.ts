@@ -200,7 +200,14 @@ export class TournamentsController {
    *
    */
   @Patch(':tournamentId')
+  @ApiBearerAuth()
+  @UseGuards(FirebaseAuthGuard)
   @ApiOperation({ summary: 'Add  Game Results' })
+  @ApiResponse({
+    status: 201,
+    description: 'The game results has been successfully added.',
+  })
+  @ApiResponse({ status: 403, description: 'Unauthorized.' })
   addScore(
     @Param('tournamentId') tournamentId: string,
     @Body() matchResult: matchResultDto,

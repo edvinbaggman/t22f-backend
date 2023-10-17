@@ -22,11 +22,11 @@ https://t22f-hvr74qbrvq-ew.a.run.app/
 
 We have documented and visualized the API endpoints using Swagger for your convenience. Swagger provides a user-friendly interface to explore the API and interact with its various routes.
 
+https://t22f-hvr74qbrvq-ew.a.run.app/api-docs#/
+
 To access the Swagger documentation and test the API, follow these steps:
 
-    1. Click on the following link to open the Swagger documentation:
-
-    https://t22f-hvr74qbrvq-ew.a.run.app/api-docs#/
+    1. Click on the link to open the Swagger documentation
 
     2. You will be presented with a list of available API endpoints, along with detailed descriptions and input parameters.
 
