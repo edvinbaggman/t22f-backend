@@ -289,6 +289,8 @@ export class TournamentsController {
    */
   @Get(':tournamentId/getPlayersNotInTournamment')
   @ApiOperation({ summary: 'Get names of user players not in tournament' })
+  @ApiBearerAuth()
+  @UseGuards(FirebaseAuthGuard)
   @ApiResponse({
     status: 200,
     description: 'Players names retrieved successfully.',
