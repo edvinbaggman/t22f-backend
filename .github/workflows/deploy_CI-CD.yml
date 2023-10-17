@@ -33,7 +33,9 @@ jobs:
       run: |
         touch .env
         echo FIRESTORE_KEY=${{ secrets.FIRESTORE_KEY }} >> .env
+        echo 'hhhh'
         echo GCP_KEY=${{ secrets.GCP_KEY }} >> .env 
+        echo 'vvvvv'
         cat .env
     
 
