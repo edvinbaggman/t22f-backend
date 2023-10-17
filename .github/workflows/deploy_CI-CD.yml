@@ -34,8 +34,9 @@ jobs:
         FIRESTORE_KEY: ${{ secrets.FIRESTORE_KEY }}
         GCP_KEY: ${{ secrets.GCP_KEY }}
       run: |
-        docker build -t gcr.io/takes-two-to-fwango/t22f:${{ github.sha }} .
-        docker push gcr.io/takes-two-to-fwango/t22f:${{ github.sha }}
+        docker build -t t22f .
+        docker tag t22f gcr.io/takes-two-to-fwango/t22f
+        docker push gcr.io/takes-two-to-fwango/t22f
 
 
     - name: Deploy to Cloud Run

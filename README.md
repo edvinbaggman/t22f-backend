@@ -49,6 +49,7 @@ To use the project, you can launch it using npm or Docker. Both methods are deta
 
 **Note**: Please be aware that the methods may not work if you don't have the necessary Firestore and GCP keys.
 
+**npm** 
 
 ### Installation
 
@@ -68,6 +69,7 @@ $ npm run start:dev
 # production mode
 $ npm run start:prod
 ```
+
 
 ### Running with Docker
 
@@ -94,7 +96,7 @@ $ docker run -d -p 8080:8080 TakesTwoToFwango_Backend
 
 The application will be running inside the Docker container. You can access it by opening a web browser and navigating to:
 
-http://localhost:3000
+http://localhost:8080
 
 
 ### Stopping the Docker Container

@@ -165,6 +165,13 @@ export class UsersController {
   @ApiOperation({ summary: 'Get user Leaderboard' })
   @ApiBearerAuth()
   @UseGuards(FirebaseAuthGuard)
+  @ApiResponse({
+    status: 200,
+    description: 'The user has been successfully renamed.',
+  })
+  @ApiResponse({ status: 400, description: 'Bad Request.' })
+  @ApiResponse({ status: 403, description: 'Unauthorized.' })
+  @ApiResponse({ status: 404, description: 'User not found.' })
   getLeaderboard(@Param('userId') userId: string): Promise<ILeaderboardUser[]> {
     return this.userService.getLeaderboard(userId);
   }
