@@ -13,10 +13,10 @@ async function bootstrap() {
 
   const options = new DocumentBuilder()
     .setTitle('Backend API')
-    .setDescription('La description de mon API')
-    .setVersion('1.0')
+    .setDescription(' The Backend API for the Takes Two To Fwango game')
+    .setVersion('1.2')
     .addTag('myAPI')
-    // .addBearerAuth() // To add later when we will use authentication
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, options);
