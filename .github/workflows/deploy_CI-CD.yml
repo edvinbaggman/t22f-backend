@@ -32,16 +32,15 @@ jobs:
         project_id: takes-two-to-fwango
         export_default_credentials: true
 
-    # - name: Authenticate Docker to GCR
-    #   run: |
-    #     echo '${{ secrets.GCP_KEY }}' | docker login -u _json_key --password-stdin https://gcr.io
+    - name: Authenticate Docker to GCR
+      run: |
+        echo ${{ secrets.GCP_KEY }} | docker login -u _json_key --password-stdin https://gcr.io
 
     - name : Creating .env file
       run: |
         touch .env
         echo FIRESTORE_KEY=${{ secrets.FIRESTORE_KEY }} >> .env
         echo GCP_KEY=${{ secrets.GCP_KEY }} >> .env 
-        cat .env
 
     - name: Build and Push Docker image
       env:
