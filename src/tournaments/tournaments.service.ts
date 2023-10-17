@@ -804,20 +804,20 @@ const createLeaderboard = (tournamentData) => {
         leaderboard[team2player1].lastMatches.push('draw');
         leaderboard[team2player2].lastMatches.push('draw');
       }
-      leaderboard[team1player1].matches += 1;
-      leaderboard[team1player2].matches += 1;
-      leaderboard[team2player1].matches += 1;
-      leaderboard[team2player2].matches += 1;
-      leaderboard[team1player1].pointDiff += pointDiffTeam1;
-      leaderboard[team1player2].pointDiff += pointDiffTeam1;
-      leaderboard[team2player1].pointDiff += pointDiffTeam2;
-      leaderboard[team2player2].pointDiff += pointDiffTeam2;
+      leaderboard[team1player1].games += 1;
+      leaderboard[team1player2].games += 1;
+      leaderboard[team2player1].games += 1;
+      leaderboard[team2player2].games += 1;
+      leaderboard[team1player1].points += pointDiffTeam1;
+      leaderboard[team1player2].points += pointDiffTeam1;
+      leaderboard[team2player1].points += pointDiffTeam2;
+      leaderboard[team2player2].points += pointDiffTeam2;
     }
   }
   const leaderboardArray: leaderboardPlayer[] = Object.values(leaderboard);
   leaderboardArray.sort(sortLeaderboard);
   const leaderboardArrayWithoutInactive = leaderboardArray.filter(
-    (player) => player.matches > 0,
+    (player) => player.games > 0,
   );
 
   return leaderboardArrayWithoutInactive;
