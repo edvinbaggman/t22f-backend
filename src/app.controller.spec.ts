@@ -15,9 +15,9 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
-    it('should return "Welcome to Takes Two To Fwango Backend !"', () => {
+    it('should return "Welcome to Takes Two To Fwango Backend!"', () => {
       expect(appController.getHello()).toBe(
-        'Welcome to Takes Two To Fwango Backend !',
+        'Welcome to Takes Two To Fwango Backend!',
       );
     });
   });

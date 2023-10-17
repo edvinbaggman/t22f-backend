@@ -35,9 +35,9 @@ jobs:
         FIRESTORE_KEY: ${{ secrets.FIRESTORE_KEY }}
         GCP_KEY: ${{ secrets.GCP_KEY }}
       run: |
-        docker build -t b .
-        docker tag b gcr.io/takes-two-to-fwango/b
-        docker push gcr.io/takes-two-to-fwango/b
+        docker build -t t22f  .
+        docker tag t22f  gcr.io/takes-two-to-fwango/t22f 
+        docker push gcr.io/takes-two-to-fwango/t22f 
 
     - name: Authenticate with GCP
       run: |
@@ -48,5 +48,5 @@ jobs:
 
     - name: Deploy to Cloud Run
       run: |
-        gcloud run deploy b --image gcr.io/takes-two-to-fwango/b --platform managed --allow-unauthenticated --project=takes-two-to-fwango --region europe-west1
+        gcloud run deploy t22f  --image gcr.io/takes-two-to-fwango/t22f  --platform managed --allow-unauthenticated --project=takes-two-to-fwango --region europe-west1
 

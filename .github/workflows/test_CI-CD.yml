@@ -1,54 +1,37 @@
-# name: CI/CD Pipeline
+name: CI/CD Pipeline
 
-# on:
-#   push:
-#     branches:
-#       - main
+on:
+  push:
+    branches:
+      - main
       
-# jobs:
-#   build_and_test:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Checkout Code
-#         uses: actions/checkout@v2
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
       
-#       - name: Install Dependencies
-#         run: npm install
+      - name: Install Dependencies
+        run: npm install
 
-#       - name: Run Tests
-#         run: npm test
+      - name: Run Tests
+        run: npm test
 
-#   check_commit_date:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Checkout Code
-#         uses: actions/checkout@v2
+  check_commit_date:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
       
-#       - name: Check Last Commit Date
-#         run: |
-#           COMMIT_DATE=$(git log -1 --pretty=format:%cd)
-#           echo "Last commit date: $COMMIT_DATE"
+      - name: Check Last Commit Date
+        run: |
+          COMMIT_DATE=$(git log -1 --pretty=format:%cd)
+          echo "Last commit date: $COMMIT_DATE"
 
-#   check_test_success:
-#     needs: build_and_test
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Confirm Tests Success
-#         run: echo "Tests were successful!"
-
-
-# - name : Creating .env file
-# run: |
-#   touch .env
-#   echo FIRESTORE_KEY=${{ secrets.FIRESTORE_KEY }} >> .env
-#   echo GCP_KEY=${{ secrets.GCP_KEY }} >> .env 
-
-# - name: Build and Push Docker image
-# env:
-#   FIRESTORE_KEY: ${{ secrets.FIRESTORE_KEY }}
-#   GCP_KEY: ${{ secrets.GCP_KEY }}
-# run: |
-#   IMAGE_TAG=$(date +"%Y%m%d%H%M%S")
-#   docker build -t t22f:$IMAGE_TAG .
-#   docker tag t22f:$IMAGE_TAG gcr.io/takes-two-to-fwango/t22f:$IMAGE_TAG
-#   docker push gcr.io/takes-two-to-fwango/t22f:$IMAGE_TAG
+  check_test_success:
+    needs: build_and_test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirm Tests Success
+        run: echo "Tests were successful!"
