@@ -3,7 +3,7 @@ import * as dotenv from 'dotenv';
 
 dotenv.config({ path: process.env.DOTENV_PATH });
 
-console.log('Process GCP key : ' + process.env.GCP_KEY);
+console.log('SSSS  Process GCP key : ' + process.env.GCP_KEY);
 
 const storage = new Storage({
   projectId: 'takes-two-to-fwango',
