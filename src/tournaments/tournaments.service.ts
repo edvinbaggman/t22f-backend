@@ -245,7 +245,7 @@ export class TournamentsService {
 
     const updateObject = {};
     updateObject[`rounds.${roundsPlayed}`] = round;
-    const res = tournamentRef.update(updateObject);
+    const res = await tournamentRef.update(updateObject);
     return JSON.stringify(res);
   }
 
