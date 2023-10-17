@@ -29,10 +29,18 @@ jobs:
       run: |
         echo '${{ secrets.GCP_KEY }}' | docker login -u _json_key --password-stdin https://gcr.io
 
+    - name : Creating .env file
+      run: |
+        touch .env
+        echo FIRESTORE_KEY=${{ secrets.FIRESTORE_KEY }} >> .env
+        echo GCP_KEY=${{ secrets.GCP_KEY }} >> .env 
+        cat .env
+    
+
     - name: Build and Push Docker image
-      # env:
-      #   FIRESTORE_KEY: ${{ secrets.FIRESTORE_KEY }}
-      #   GCP_KEY: ${{ secrets.GCP_KEY }}
+      env:
+        FIRESTORE_KEY: ${{ secrets.FIRESTORE_KEY }}
+        GCP_KEY: ${{ secrets.GCP_KEY }}
       run: |
         IMAGE_TAG=$(date +"%Y%m%d%H%M%S")
         docker build -t t22f:$IMAGE_TAG .
