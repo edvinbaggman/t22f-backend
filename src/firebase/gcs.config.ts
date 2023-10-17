@@ -1,12 +1,13 @@
 import { Storage } from '@google-cloud/storage';
 import * as dotenv from 'dotenv';
 
-dotenv.config();
-console.log('Process GCP key : ' + process.env.GCP_KEY_LOCAL);
+dotenv.config({ path: process.env.DOTENV_PATH });
+
+console.log('Process GCP key : ' + process.env.GCP_KEY);
 
 const storage = new Storage({
   projectId: 'takes-two-to-fwango',
-  credentials: JSON.parse(process.env.GCP_KEY_LOCAL),
+  credentials: JSON.parse(process.env.GCP_KEY),
 });
 
 export const gcsBucketName = 'takes-two-to-fwango.appspot.com';
