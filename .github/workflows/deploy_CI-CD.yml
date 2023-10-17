@@ -36,9 +36,9 @@ jobs:
         GCP_KEY: ${{ secrets.GCP_KEY }}
       run: |
         IMAGE_TAG=$(date +"%Y%m%d%H%M%S")
-        docker build -t t22f:$IMAGE_TAG .
-        docker tag t22f:$IMAGE_TAG gcr.io/takes-two-to-fwango/t22f:$IMAGE_TAG
-        docker push gcr.io/takes-two-to-fwango/t22f:$IMAGE_TAG
+        docker build -t b:$IMAGE_TAG .
+        docker tag b:$IMAGE_TAG gcr.io/takes-two-to-fwango/b:$IMAGE_TAG
+        docker push gcr.io/takes-two-to-fwango/b:$IMAGE_TAG
 
     - name: Authenticate with GCP
       run: |
@@ -49,5 +49,5 @@ jobs:
 
     - name: Deploy to Cloud Run
       run: |
-        gcloud run deploy t22f --image gcr.io/takes-two-to-fwango/t22f --platform managed --allow-unauthenticated --project=takes-two-to-fwango --region europe-west1
+        gcloud run deploy b --image gcr.io/takes-two-to-fwango/b --platform managed --allow-unauthenticated --project=takes-two-to-fwango --region europe-west1
 
