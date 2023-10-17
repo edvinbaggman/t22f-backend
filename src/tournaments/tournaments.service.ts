@@ -9,6 +9,7 @@ import mime from 'mime-types';
 import { bucket, gcsBucketName } from '../firebase/gcs.config';
 import { CreatePlayersDto } from './dto/create-players.dto';
 import { IsimpleTournaments } from './interface/simpleTournaments.interface';
+import { leaderboardPlayer } from './interface/leaderboardPlayer.interface';
 
 @Injectable()
 export class TournamentsService {
@@ -813,9 +814,13 @@ const createLeaderboard = (tournamentData) => {
       leaderboard[team2player2].pointDiff += pointDiffTeam2;
     }
   }
-  const leaderboardArray = Object.values(leaderboard);
+  const leaderboardArray: leaderboardPlayer[] = Object.values(leaderboard);
   leaderboardArray.sort(sortLeaderboard);
-  return leaderboardArray;
+  const leaderboardArrayWithoutInactive = leaderboardArray.filter(
+    (player) => player.matches > 0,
+  );
+
+  return leaderboardArrayWithoutInactive;
 };
 
 /**
