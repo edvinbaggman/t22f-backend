@@ -764,11 +764,11 @@ const createLeaderboard = (tournamentData) => {
     const playerId = player.id;
     const playerName = player.name;
     leaderboard[playerId] = {
-      player: playerId,
-      playerName: playerName,
-      matches: 0,
+      id: playerId,
+      name: playerName,
+      games: 0,
       won: 0,
-      pointDiff: 0,
+      points: 0,
       lastMatches: [],
     };
   }

@@ -1,8 +1,8 @@
 export interface leaderboardPlayer {
-  player: string;
-  playerName: string;
+  id: string;
+  name: string;
   matches: number;
   won: number;
-  pointDiff: number;
+  points: number;
   lastMatches: string[];
 }
