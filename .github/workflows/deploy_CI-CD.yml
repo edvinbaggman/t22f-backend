@@ -11,19 +11,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
-    
-    # - name: Run google-github-actions/auth
-    #   uses: google-github-actions/auth@v0.4.0
-    #   with:
-    #     credentials_json: ${{ secrets.GCP_KEY }}
-    #     create_credentials_file: true
-    #     access_token_lifetime: 3600s
-    #     access_token_scopes: https://www.googleapis.com/auth/cloud-platform
-    #     id_token_include_email: false
-    #   env:
-    #     NODE_OPTIONS: --max-old-space-size=4096 # Définit la taille maximale du tas à 4 Go (ajustez selon vos besoins)
-    
+      uses: actions/checkout@v2  
   
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
@@ -52,6 +40,12 @@ jobs:
         docker tag t22f:$IMAGE_TAG gcr.io/takes-two-to-fwango/t22f:$IMAGE_TAG
         docker push gcr.io/takes-two-to-fwango/t22f:$IMAGE_TAG
 
+    - name: Authenticate with GCP
+      run: |
+        echo ${{ secrets.GCP_KEY }} > gcp_key.json
+        gcloud auth activate-service-account --key-file=gcp_key.json
+      
+      
 
     - name: Deploy to Cloud Run
       run: |
