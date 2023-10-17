@@ -1,20 +1,39 @@
 jest.mock('firebase-admin', () => {
   const userDocMock = {
     exists: true,
-    id: 'someUserId',
+    id: 'user1',
     data: () => ({
       name: 'John Doe',
       email: 'john.doe@example.com',
-      players: {},
+      players: {
+        '1234': {
+          name: 'Player1',
+          sex: 'man',
+          stats: {},
+        },
+      },
     }),
   };
 
-  const mockedFirestore = {
-    collection: jest.fn().mockReturnValue({
-      doc: jest.fn().mockReturnValue({
-        get: jest.fn().mockResolvedValueOnce(userDocMock),
-      }),
+  let mockUserDocument = { ...userDocMock };
+
+  const docMock = {
+    get: jest.fn().mockImplementation(() => Promise.resolve(mockUserDocument)),
+    set: jest.fn().mockImplementation((data) => {
+      mockUserDocument = {
+        exists: true,
+        id: '123456789',
+        data: () => data,
+      };
     }),
+  };
+
+  const collectionMock = {
+    doc: jest.fn().mockReturnValue(docMock),
+  };
+
+  const mockedFirestore = {
+    collection: jest.fn().mockReturnValue(collectionMock),
   };
 
   return {
@@ -23,41 +42,3 @@ jest.mock('firebase-admin', () => {
     firestore: jest.fn().mockReturnValue(mockedFirestore),
   };
 });
-
-// const mockFirestoreData = {
-//   'someUserId': {
-//     name: 'John Doe',
-//     email: 'john.doe@example.com',
-//     players: {
-//       'somePlayerId': {
-//         name: 'Player1',
-//         stats: {
-//           someTournamentId: {
-//             games: 10,
-//             win: 5,
-//             points: 50,
-//           }
-//         }
-//       }
-//     }
-//   }
-// };
-
-// const docMock = (id) => ({
-//   get: jest.fn().mockResolvedValueOnce({
-//     exists: !!mockFirestoreData[id],
-//     id,
-//     data: () => mockFirestoreData[id]
-//   }),
-//   set: jest.fn(),
-//   update: jest.fn()
-// });
-
-// jest.mock('firebase-admin', () => ({
-//   initializeApp: jest.fn(),
-//   firestore: jest.fn().mockReturnValue({
-//     collection: jest.fn().mockReturnValue({
-//       doc: jest.fn().mockImplementation(docMock),
-//     }),
-//   }),
-// }));

@@ -5,6 +5,7 @@ import { CreateUsersDto } from './dto/create-users.dto';
 import { ITotalStats } from './interface/stats.interface';
 import { RenameUserDto } from './dto/rename-users.dto';
 import { RenamePlayersDto } from './dto/rename-player.dto';
+import { ILeaderboardUser } from './interface/leaderboard.interface';
 
 @Injectable()
 export class UsersService {
@@ -164,7 +165,16 @@ export class UsersService {
     };
   }
 
-  async getLeaderboard(userId: string) {
+  /**
+   * Get the leaderboard of a user
+   *
+   * @param {string} userId - The id of the user
+   * @returns {Promise<ILeaderboardUser[]>} The leaderboard of the user
+   *
+   * @throws {Error} If the user is not found
+   *
+   */
+  async getLeaderboard(userId: string): Promise<ILeaderboardUser[]> {
     const userRef = this.firestore.collection('users').doc(userId);
     const userDoc = await userRef.get();
     if (!userDoc.exists) {
