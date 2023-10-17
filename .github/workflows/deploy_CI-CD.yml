@@ -35,10 +35,9 @@ jobs:
         FIRESTORE_KEY: ${{ secrets.FIRESTORE_KEY }}
         GCP_KEY: ${{ secrets.GCP_KEY }}
       run: |
-        IMAGE_TAG=$(date +"%Y%m%d%H%M%S")
-        docker build -t b:$IMAGE_TAG .
-        docker tag b:$IMAGE_TAG gcr.io/takes-two-to-fwango/b:$IMAGE_TAG
-        docker push gcr.io/takes-two-to-fwango/b:$IMAGE_TAG
+        docker build -t b .
+        docker tag b gcr.io/takes-two-to-fwango/b
+        docker push gcr.io/takes-two-to-fwango/b
 
     - name: Authenticate with GCP
       run: |
