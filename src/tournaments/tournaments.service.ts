@@ -168,9 +168,9 @@ export class TournamentsService {
     tournamentDate.setHours(0, 0, 0, 0);
     today.setHours(0, 0, 0, 0);
 
-    if (tournamentDate < today) {
+    if (tournamentDate.getTime() < today.getTime()) {
       return 'finished';
-    } else if (tournamentDate > today) {
+    } else if (tournamentDate.getTime() > today.getTime()) {
       return 'upcoming';
     } else {
       return 'todays';
