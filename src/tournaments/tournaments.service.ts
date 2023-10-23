@@ -167,12 +167,16 @@ export class TournamentsService {
     const tournamentDate = new Date(tournament.date);
     tournamentDate.setHours(0, 0, 0, 0);
     today.setHours(0, 0, 0, 0);
+    console.log(tournament.name);
+    console.log(tournamentDate.getTime(), today.getTime());
+    console.log(tournamentDate.getTime() === today.getTime());
 
     if (tournamentDate.getTime() < today.getTime()) {
       return 'finished';
     } else if (tournamentDate.getTime() > today.getTime()) {
       return 'upcoming';
     } else {
+      console.log('today : ' + tournament.name);
       return 'todays';
     }
   }
