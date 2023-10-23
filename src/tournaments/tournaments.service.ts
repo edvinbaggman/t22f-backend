@@ -168,9 +168,9 @@ export class TournamentsService {
     tournamentDate.setHours(0, 0, 0, 0);
     today.setHours(0, 0, 0, 0);
 
-    if (tournamentDate < today) {
+    if (tournamentDate.getTime() < today.getTime()) {
       return 'finished';
-    } else if (tournamentDate > today) {
+    } else if (tournamentDate.getTime() > today.getTime()) {
       return 'upcoming';
     } else {
       return 'todays';
@@ -191,6 +191,7 @@ export class TournamentsService {
     const upcoming = [];
     const todays = [];
     const today = new Date();
+    today.setDate(today.getDate() - 1); // to Update it with the frontend !
 
     tournamentsSnapshot.docs.forEach((tournamentDoc) => {
       const tournament: IsimpleTournaments =
