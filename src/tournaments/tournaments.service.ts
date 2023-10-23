@@ -1,6 +1,6 @@
 import { UpdateTournamentDto } from './dto/update-tournament.dto';
 import { matchResultDto } from './dto/match-result.dto';
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateTournamentDto } from './dto/create-tournament.dto';
 import * as admin from 'firebase-admin';
 import crypto from 'crypto';
@@ -261,7 +261,10 @@ export class TournamentsService {
     const round = generateRound(tournamentData, userPlayers);
 
     if (Object.keys(round).length < 1) {
-      return 'not enough players';
+      throw new HttpException(
+        'Not enough players',
+        HttpStatus.METHOD_NOT_ALLOWED,
+      );
     }
 
     const updateObject = {};
