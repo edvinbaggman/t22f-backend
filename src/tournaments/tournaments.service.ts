@@ -168,6 +168,7 @@ export class TournamentsService {
     tournamentDate.setHours(0, 0, 0, 0);
     today.setHours(0, 0, 0, 0);
     console.log(tournament.name);
+    console.log(tournamentDate, today);
     console.log(tournamentDate.getTime(), today.getTime());
     console.log(tournamentDate.getTime() === today.getTime());
 
