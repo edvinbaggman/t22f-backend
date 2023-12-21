@@ -9,7 +9,6 @@ import mime from 'mime-types';
 import { bucket, gcsBucketName } from '../firebase/gcs.config';
 import { CreatePlayersDto } from './dto/create-players.dto';
 import { IsimpleTournaments } from './interface/simpleTournaments.interface';
-import { ILeaderboardPlayer } from './interface/leaderboardPlayer.interface';
 import { Tournament } from './entities/tournament.model';
 import { Players } from './entities/players.model';
 
@@ -115,8 +114,6 @@ export class TournamentsService {
     const tournamentData = tournamentSnapshot.data();
 
     tournamentData.players = await this.getPlayers(tournamentData);
-
-    tournamentData.leaderboard = createLeaderboard(tournamentData);
 
     return JSON.stringify(tournamentData);
   }
@@ -270,8 +267,8 @@ export class TournamentsService {
 
     const updateObject = {};
     updateObject[`rounds.${roundsPlayed}`] = round;
-    const res = await tournamentRef.update(updateObject);
-    return JSON.stringify(res);
+    await tournamentRef.update(updateObject);
+    return JSON.stringify(round);
   }
 
   /**
@@ -285,7 +282,7 @@ export class TournamentsService {
   async addScore(
     tournamentId: string,
     matchResultDto: matchResultDto,
-  ): Promise<void> {
+  ): Promise<string> {
     const tournamentRef = this.firestore
       .collection('tournaments')
       .doc(tournamentId);
@@ -298,7 +295,8 @@ export class TournamentsService {
       `rounds.${matchResultDto.round}.${matchResultDto.match}.team2.points`
     ] = matchResultDto.team2Points;
 
-    await tournamentRef.update(updateObject);
+    const res = await tournamentRef.update(updateObject);
+    return JSON.stringify(res);
   }
 
   /**
@@ -535,11 +533,23 @@ const generateRound = (
   tournamentData: admin.firestore.DocumentData,
   userPlayers: Players,
 ) => {
+  const settings = tournamentData.settings;
   const playersInactiveArray = tournamentData.playersInactive;
   const playersInactiveLength = playersInactiveArray.length;
   const playersArray = tournamentData.players;
   const playersLength = playersArray.length;
-  const {} = userPlayers;
+
+  let numberOfWomen = 0;
+  let numberOfMen = 0;
+
+  for (const key in userPlayers) {
+    const person = userPlayers[key];
+    if (person.sex === 'woman') {
+      numberOfWomen++;
+    } else if (person.sex === 'man') {
+      numberOfMen++;
+    }
+  }
 
   //Create matrix with zeros
   const playedMatrix = [];
@@ -586,9 +596,7 @@ const generateRound = (
     (playersLength - playersInactiveLength) / 4,
   );
 
-  const maxSimultaneousGames = Number(
-    tournamentData.settings.maxSimultaneousGames,
-  );
+  const maxSimultaneousGames = Number(settings.maxSimultaneousGames);
 
   maximumNumberOfGames = Math.min(maximumNumberOfGames, maxSimultaneousGames);
 
@@ -601,6 +609,58 @@ const generateRound = (
   const sortedPlayerIndexesWithoutInactive = sortedPlayerIndexes.filter(
     (index) => !indexOfInactivePlayers.includes(index),
   );
+
+  let numberOfWomenResting = 0;
+  let numberOfMensResting = 0;
+
+  if (settings.prioGender == 1) {
+    let numberOfMenPlayingThisRound = 0;
+    let numberOfWomenPlayingThisRound = 0;
+    const wantedNumberOfEachGender = maximumNumberOfPlayers / 2;
+    if (settings.prioType == 0) {
+      if (numberOfWomen < wantedNumberOfEachGender) {
+        const numberOfWomenGames = Math.floor(numberOfWomen / 4);
+
+        const maxNumberOfMensGames = maximumNumberOfGames - numberOfWomenGames;
+        const numberOfMensGames = Math.min(
+          maxNumberOfMensGames,
+          Math.floor(numberOfMen / 4),
+        );
+        numberOfMenPlayingThisRound = numberOfMensGames * 4;
+        numberOfWomenPlayingThisRound = numberOfWomenGames * 4;
+      } else if (numberOfMen < wantedNumberOfEachGender) {
+        const numberOfMensGames = Math.floor(numberOfMen / 4);
+
+        const maxNumberOfWomensGames = maximumNumberOfGames - numberOfMensGames;
+        const numberOfWomensGames = Math.min(
+          maxNumberOfWomensGames,
+          Math.floor(numberOfWomen / 4),
+        );
+        numberOfMenPlayingThisRound = numberOfMensGames * 4;
+        numberOfWomenPlayingThisRound = numberOfWomensGames * 4;
+      } else {
+        numberOfMenPlayingThisRound = wantedNumberOfEachGender;
+        numberOfWomenPlayingThisRound = wantedNumberOfEachGender;
+      }
+    } else if (settings.prioType == 1) {
+      if (numberOfWomen < wantedNumberOfEachGender) {
+        const numberOfMixGames = Math.floor(numberOfWomen / 2);
+        numberOfMenPlayingThisRound = numberOfMixGames * 2;
+        numberOfWomenPlayingThisRound = numberOfMixGames * 2;
+      } else if (numberOfMen < wantedNumberOfEachGender) {
+        const numberOfMixGames = Math.floor(numberOfMen / 2);
+        numberOfMenPlayingThisRound = numberOfMixGames * 4;
+        numberOfWomenPlayingThisRound = numberOfMixGames * 4;
+      } else {
+        numberOfMenPlayingThisRound = wantedNumberOfEachGender;
+        numberOfWomenPlayingThisRound = wantedNumberOfEachGender;
+      }
+    }
+  } else {
+    const indexOfPlayersPlayingThisRound =
+      sortedPlayerIndexesWithoutInactive.slice(0, maximumNumberOfPlayers);
+  }
+
   const indexOfPlayersPlayingThisRound =
     sortedPlayerIndexesWithoutInactive.slice(0, maximumNumberOfPlayers);
 
@@ -777,104 +837,6 @@ async function uploadImage(file: Express.Multer.File): Promise<string> {
   }
   return publicUrl;
 }
-
-/**
- * Sort Two player of a leaderborad
- *
- * @param {ILeaderboardPlayer} playerA - Player A.
- * @param {ILeaderboardPlayer} playerB - Player B.
- * @returns {number} - Diffrence between the two players stats
- *
- */
-function sortLeaderboard(
-  playerA: ILeaderboardPlayer,
-  playerB: ILeaderboardPlayer,
-): number {
-  if (playerA.won !== playerB.won) {
-    return playerB.won - playerA.won;
-  }
-
-  if (playerA.points !== playerB.points) {
-    return playerB.points - playerA.points;
-  }
-
-  return playerA.games - playerB.games;
-}
-
-/**
- * Create a leaderboard for a tournament
- *
- * @param {admin.firestore.DocumentData} tournamentData - Firebase document data of the tournament.
- * @returns {ILeaderboardPlayer[]} - Array of players in the leaderboard.
- *
- */
-const createLeaderboard = (
-  tournamentData: admin.firestore.DocumentData,
-): ILeaderboardPlayer[] => {
-  const leaderboard = {};
-
-  for (const player of tournamentData.players) {
-    const playerId = player.id;
-    const playerName = player.name;
-    leaderboard[playerId] = {
-      id: playerId,
-      name: playerName,
-      games: 0,
-      won: 0,
-      points: 0,
-      lastMatches: [],
-    };
-  }
-
-  for (const roundId of Object.keys(tournamentData.rounds)) {
-    for (const matchId of Object.keys(tournamentData.rounds[roundId])) {
-      const match = tournamentData.rounds[roundId][matchId];
-      const team1player1 = match.team1.players[0];
-      const team1player2 = match.team1.players[1];
-      const team2player1 = match.team2.players[0];
-      const team2player2 = match.team2.players[1];
-      const pointsTeam1 = match.team1.points ? Number(match.team1.points) : 0;
-      const pointsTeam2 = match.team2.points ? Number(match.team2.points) : 0;
-      const pointDiffTeam1 = pointsTeam1 - pointsTeam2;
-      const pointDiffTeam2 = pointsTeam2 - pointsTeam1;
-      if (pointDiffTeam1 > 0) {
-        leaderboard[team1player1].won += 1;
-        leaderboard[team1player2].won += 1;
-        leaderboard[team1player1].lastMatches.push('won');
-        leaderboard[team1player2].lastMatches.push('won');
-        leaderboard[team2player1].lastMatches.push('loss');
-        leaderboard[team2player2].lastMatches.push('loss');
-      } else if (pointDiffTeam2 > 0) {
-        leaderboard[team2player1].won += 1;
-        leaderboard[team2player2].won += 1;
-        leaderboard[team2player1].lastMatches.push('won');
-        leaderboard[team2player2].lastMatches.push('won');
-        leaderboard[team1player1].lastMatches.push('loss');
-        leaderboard[team1player2].lastMatches.push('loss');
-      } else {
-        leaderboard[team1player1].lastMatches.push('draw');
-        leaderboard[team1player2].lastMatches.push('draw');
-        leaderboard[team2player1].lastMatches.push('draw');
-        leaderboard[team2player2].lastMatches.push('draw');
-      }
-      leaderboard[team1player1].games += 1;
-      leaderboard[team1player2].games += 1;
-      leaderboard[team2player1].games += 1;
-      leaderboard[team2player2].games += 1;
-      leaderboard[team1player1].points += pointDiffTeam1;
-      leaderboard[team1player2].points += pointDiffTeam1;
-      leaderboard[team2player1].points += pointDiffTeam2;
-      leaderboard[team2player2].points += pointDiffTeam2;
-    }
-  }
-  const leaderboardArray: ILeaderboardPlayer[] = Object.values(leaderboard);
-  leaderboardArray.sort(sortLeaderboard);
-  const leaderboardArrayWithoutInactive = leaderboardArray.filter(
-    (player) => player.games > 0,
-  );
-
-  return leaderboardArrayWithoutInactive;
-};
 
 /**
  * Process players stats updates

@@ -211,7 +211,7 @@ export class TournamentsController {
   addScore(
     @Param('tournamentId') tournamentId: string,
     @Body() matchResult: matchResultDto,
-  ): Promise<void> {
+  ): Promise<string> {
     return this.tournamentsService.addScore(tournamentId, matchResult);
   }
 
